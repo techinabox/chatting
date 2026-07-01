@@ -17,12 +17,12 @@ final messageRepositoryProvider = Provider<MessageRepository>((ref) {
   return MessageRepository(client: client);
 });
 
-final messagesStreamProvider = StreamProvider.family<List<Map<String, dynamic>>, String>((ref, roomId) {
+final messagesStreamProvider = StreamProvider.autoDispose.family<List<Map<String, dynamic>>, String>((ref, roomId) {
   final supabase = ref.watch(supabaseClientProvider);
-  return supabase.from('messages').stream(primaryKey: ['id']).eq('room_id', roomId).order('created_at', ascending: true);
+  return supabase.from('messages').stream(primaryKey: ['id']).eq('room_id', roomId).order('created_at', ascending: false);
 });
 
-final roomStreamProvider = StreamProvider.family<Map<String, dynamic>?, String>((ref, roomId) {
+final roomStreamProvider = StreamProvider.autoDispose.family<Map<String, dynamic>?, String>((ref, roomId) {
   final supabase = ref.watch(supabaseClientProvider);
   return supabase.from('rooms').stream(primaryKey: ['id']).eq('id', roomId).map((events) => events.isEmpty ? null : events.first);
 });
