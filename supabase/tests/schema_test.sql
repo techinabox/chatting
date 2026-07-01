@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(31);
+SELECT plan(30);
 
 -- Tables exist
 SELECT has_table('public', 'rooms', 'rooms table should exist');
