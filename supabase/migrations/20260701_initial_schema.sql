@@ -49,7 +49,6 @@ CREATE POLICY "Participants can view room" ON public.rooms FOR SELECT USING (
 CREATE POLICY "Creator can manage invite codes" ON public.invite_codes FOR ALL USING (
     EXISTS (SELECT 1 FROM public.rooms WHERE id = room_id AND creator_id = auth.uid())
 );
-CREATE POLICY "Anyone can read invite codes to join" ON public.invite_codes FOR SELECT USING (true);
 
 CREATE POLICY "Participants can manage messages" ON public.messages FOR ALL USING (
     EXISTS (SELECT 1 FROM public.room_participants WHERE room_id = messages.room_id AND user_id = auth.uid()) OR

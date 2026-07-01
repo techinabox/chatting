@@ -1,10 +1,11 @@
 BEGIN;
-SELECT plan(30);
+SELECT plan(38);
 
 -- Tables exist
 SELECT has_table('public', 'rooms', 'rooms table should exist');
 SELECT has_table('public', 'invite_codes', 'invite_codes table should exist');
 SELECT has_table('public', 'messages', 'messages table should exist');
+SELECT has_table('public', 'room_participants', 'room_participants table should exist');
 
 -- Columns in rooms
 SELECT has_column('public', 'rooms', 'id', 'rooms should have id');
@@ -25,28 +26,37 @@ SELECT has_column('public', 'messages', 'content', 'messages should have content
 SELECT has_column('public', 'messages', 'media_url', 'messages should have media_url');
 SELECT has_column('public', 'messages', 'created_at', 'messages should have created_at');
 
+-- Columns in room_participants
+SELECT has_column('public', 'room_participants', 'room_id', 'room_participants should have room_id');
+SELECT has_column('public', 'room_participants', 'user_id', 'room_participants should have user_id');
+
 -- Primary keys
 SELECT has_pk('public', 'rooms', 'rooms should have primary key');
 SELECT has_pk('public', 'invite_codes', 'invite_codes should have primary key');
 SELECT has_pk('public', 'messages', 'messages should have primary key');
+SELECT has_pk('public', 'room_participants', 'room_participants should have primary key');
 
 -- Foreign keys
 SELECT has_fk('public', 'invite_codes', 'invite_codes should have foreign keys');
 SELECT has_fk('public', 'messages', 'messages should have foreign keys');
+SELECT has_fk('public', 'room_participants', 'room_participants should have foreign keys');
 
 -- RLS enabled
 SELECT table_has_rls('public', 'rooms', 'rooms should have RLS enabled');
 SELECT table_has_rls('public', 'invite_codes', 'invite_codes should have RLS enabled');
 SELECT table_has_rls('public', 'messages', 'messages should have RLS enabled');
+SELECT table_has_rls('public', 'room_participants', 'room_participants should have RLS enabled');
 
 -- Policies exist
-SELECT policies_are('public', 'rooms', ARRAY['Allow all operations on rooms'], 'rooms should have appropriate policy');
-SELECT policies_are('public', 'invite_codes', ARRAY['Allow all operations on invite_codes'], 'invite_codes should have appropriate policy');
-SELECT policies_are('public', 'messages', ARRAY['Allow all operations on messages'], 'messages should have appropriate policy');
+SELECT policies_are('public', 'rooms', ARRAY['Creator can manage room', 'Participants can view room'], 'rooms should have appropriate policy');
+SELECT policies_are('public', 'invite_codes', ARRAY['Creator can manage invite codes'], 'invite_codes should have appropriate policy');
+SELECT policies_are('public', 'messages', ARRAY['Participants can manage messages'], 'messages should have appropriate policy');
+SELECT policies_are('public', 'room_participants', ARRAY['Participants can view their own mapping'], 'room_participants should have appropriate policy');
 
 -- Trigger & function
 SELECT has_trigger('public', 'rooms', 'on_room_delete', 'rooms should have on_room_delete trigger');
 SELECT has_function('public', 'delete_room_media', 'delete_room_media function should exist');
+SELECT has_function('public', 'join_room', 'join_room function should exist');
 
 -- Storage bucket
 SELECT results_eq(
