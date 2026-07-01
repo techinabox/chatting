@@ -1,10 +1,14 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SupabaseService {
   static Future<void> initialize() async {
+    if (!dotenv.isInitialized) {
+      await dotenv.load(fileName: ".env");
+    }
     await Supabase.initialize(
-      url: 'https://hkytnedaxvsleychdowg.supabase.co',
-      anonKey: 'sb_publishable_mkH7Qw2KEHVcH_wAIa3QJA_-dXqRjo3',
+      url: dotenv.env['SUPABASE_URL']!,
+      anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
     );
   }
 }
