@@ -12,6 +12,6 @@ import 'package:ephemeral_chat/main.dart';
 void main() {
   testWidgets('Smoke test for main screen', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
-    expect(find.text('Welcome to Ephemeral Chat'), findsOneWidget);
+    expect(find.text('Ephemeral Chat'), findsOneWidget);
   });
 }
