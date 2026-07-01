@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
   void _showJoinRoomDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -134,6 +129,9 @@ class _JoinRoomDialogState extends State<_JoinRoomDialog> {
                 }
                 if (value.length < 20) {
                   return 'Invite code must be at least 20 characters';
+                }
+                if (!RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value)) {
+                  return 'Invite code must be alphanumeric';
                 }
                 return null;
               },

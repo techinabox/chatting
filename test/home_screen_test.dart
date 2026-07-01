@@ -31,12 +31,21 @@ void main() {
     // Should see validation error
     expect(find.text('Invite code must be at least 20 characters'), findsOneWidget);
     
+    // Enter invalid non-alphanumeric code (20+ chars)
+    await tester.enterText(find.byType(TextField), 'thisisatwentycharactercode123!');
+    await tester.tap(joinSubmitButton);
+    await tester.pumpAndSettle();
+
+    // Should see alphanumeric validation error
+    expect(find.text('Invite code must be alphanumeric'), findsOneWidget);
+
     // Enter valid invite code
     await tester.enterText(find.byType(TextField), 'thisisatwentycharactercode123');
     await tester.tap(joinSubmitButton);
     await tester.pumpAndSettle();
     
-    // Validation error should be gone
+    // Validation errors should be gone
     expect(find.text('Invite code must be at least 20 characters'), findsNothing);
+    expect(find.text('Invite code must be alphanumeric'), findsNothing);
   });
 }
