@@ -6,6 +6,8 @@ import 'package:ephemeral_chat/providers/chat_providers.dart';
 import 'package:ephemeral_chat/providers/settings_provider.dart';
 import 'package:ephemeral_chat/repositories/message_repository.dart';
 import 'package:ephemeral_chat/theme/app_colors.dart';
+import 'package:ephemeral_chat/providers/call_provider.dart';
+import 'package:ephemeral_chat/screens/call_screen.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String roomId;
@@ -28,6 +30,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // Reset unread count when opening the room
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(roomRepositoryProvider).resetUnreadCount(widget.roomId);
+      ref.read(callProvider.notifier).initSignaling(widget.roomId);
     });
   }
 
@@ -278,6 +281,41 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen for incoming calls
+    ref.listen<CallStateData>(callProvider, (previous, next) {
+      if (previous?.state != CallState.ringing && next.state == CallState.ringing) {
+        // Show incoming call dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text('Incoming Call'),
+            content: Text(next.isVideoEnabled ? 'Incoming Video Call...' : 'Incoming Voice Call...'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  ref.read(callProvider.notifier).endCall();
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Decline', style: TextStyle(color: Colors.red)),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  ref.read(callProvider.notifier).answerCall();
+                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CallScreen()));
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                child: const Text('Accept'),
+              ),
+            ],
+          ),
+        );
+      }
+    });
+
+
+
     // Listen to room stream for realtime kick-out
     ref.listen<AsyncValue<Map<String, dynamic>?>>(
       roomStreamProvider(widget.roomId),
@@ -293,8 +331,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             }
           },
           error: (err, stack) {
-            print('Room stream error: \$err');
-            print('Stack trace: \$stack');
+            print('Room stream error: $err');
+            print('Stack trace: $stack');
             if (Navigator.of(context).canPop()) {
               Navigator.of(context).pop();
             } else {
@@ -341,6 +379,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
             final actions = <Widget>[
               IconButton(
+                icon: const Icon(Icons.call, color: Colors.green),
+                tooltip: 'Voice Call',
+                onPressed: () async {
+                  try {
+                    await ref.read(callProvider.notifier).makeCall(widget.roomId, false);
+                    if (context.mounted) Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CallScreen()));
+                  } catch (e) {
+                    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Call failed (Check your Mic/Cam hardware): $e'), duration: const Duration(seconds: 5)));
+                  }
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.videocam, color: Colors.green),
+                tooltip: 'Video Call',
+                onPressed: () async {
+                  try {
+                    await ref.read(callProvider.notifier).makeCall(widget.roomId, true);
+                    if (context.mounted) Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CallScreen()));
+                  } catch (e) {
+                    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Video Call failed (Check your Mic/Cam hardware): $e'), duration: const Duration(seconds: 5)));
+                  }
+                },
+              ),
+              IconButton(
                 icon: const Icon(Icons.edit, color: Colors.blue),
                 tooltip: 'Edit Room Name',
                 onPressed: () => _showEditRoomNameDialog(currentName),
@@ -381,7 +443,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           Expanded(
             child: messagesAsync.when(
-              data: (messages) {
+              data: (asyncMessages) {
+                final allMessages = asyncMessages;
+                final messages = allMessages.where((m) {
+                  final content = m['content']?.toString() ?? '';
+                  return !content.startsWith('WEBRTC_SIGNAL:');
+                }).toList();
+
                 return ListView.builder(
                   reverse: true,
                   itemCount: messages.length,
