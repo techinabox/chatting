@@ -30,7 +30,7 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('chat_media', 'chat_media', false)
 ON CONFLICT (id) DO NOTHING;
 
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
 
 -- RLS Policies
 CREATE TABLE public.room_participants (
