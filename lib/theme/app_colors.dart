@@ -4,11 +4,11 @@ class AppColors {
   // Chat Bubble Colors
   static final Color myMessageBubble = Colors.blue[700]!;
   static final Color otherMessageBubble = Colors.blueGrey[600]!;
-  
+
   // Chat Text Colors
   static const Color messageText = Colors.white;
   static const Color senderNameText = Colors.white70;
-  
+
   // Icon Colors
   static const Color deleteIcon = Colors.grey;
   static const Color closeRoomIcon = Colors.red;

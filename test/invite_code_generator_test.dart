@@ -9,8 +9,17 @@ void main() {
   });
 
   test('Throws ArgumentError if length is less than 20', () {
-    expect(() => InviteCodeGenerator.generateSecureCode(19), throwsArgumentError);
-    expect(() => InviteCodeGenerator.generateSecureCode(0), throwsArgumentError);
-    expect(() => InviteCodeGenerator.generateSecureCode(-1), throwsArgumentError);
+    expect(
+      () => InviteCodeGenerator.generateSecureCode(19),
+      throwsArgumentError,
+    );
+    expect(
+      () => InviteCodeGenerator.generateSecureCode(0),
+      throwsArgumentError,
+    );
+    expect(
+      () => InviteCodeGenerator.generateSecureCode(-1),
+      throwsArgumentError,
+    );
   });
 }

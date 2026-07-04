@@ -22,10 +22,14 @@ final defaultParticipantAvatarProvider = StateProvider<String?>((ref) {
 
 class SettingsService {
   final SharedPreferences prefs;
-  
+
   SettingsService(this.prefs);
 
-  Future<void> setDefaultParticipant(String name, String emoji, {String? avatarUrl}) async {
+  Future<void> setDefaultParticipant(
+    String name,
+    String emoji, {
+    String? avatarUrl,
+  }) async {
     await prefs.setString('default_participant_name', name);
     await prefs.setString('default_participant_emoji', emoji);
     if (avatarUrl != null) {

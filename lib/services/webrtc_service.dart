@@ -8,6 +8,7 @@ class WebRTCService {
   MediaStream? _localStream;
   MediaStream? _remoteStream;
   bool _isRemoteDescriptionSet = false;
+  final List<RTCIceCandidate> _remoteCandidatesQueue = [];
 
   bool get isRemoteDescriptionSet => _isRemoteDescriptionSet;
 
@@ -30,26 +31,32 @@ class WebRTCService {
 
   final Map<String, dynamic> _iceServers = {
     'iceServers': [
+      {'urls': 'stun:stun.l.google.com:19302'},
+      {'urls': 'stun:global.stun.twilio.com:3478'},
+      {'urls': 'stun:stun.relay.metered.ca:80'},
       {
-        'url': 'stun:stun.l.google.com:19302',
-        'urls': [
-          'stun:stun.l.google.com:19302',
-          'stun:stun1.l.google.com:19302',
-          'stun:stun2.l.google.com:19302'
-        ],
+        'urls': 'turn:global.relay.metered.ca:80',
+        'username': 'e6d79f87993e547822a8e38f',
+        'credential': '8hcmkqMZctdoqSfV',
       },
       {
-        'url': 'turn:openrelay.metered.ca:443?transport=tcp',
-        'urls': [
-          'turn:openrelay.metered.ca:80',
-          'turn:openrelay.metered.ca:443',
-          'turn:openrelay.metered.ca:443?transport=tcp'
-        ],
-        'username': 'openrelayproject',
-        'credential': 'openrelayproject',
+        'urls': 'turn:global.relay.metered.ca:80?transport=tcp',
+        'username': 'e6d79f87993e547822a8e38f',
+        'credential': '8hcmkqMZctdoqSfV',
+      },
+      {
+        'urls': 'turn:global.relay.metered.ca:443',
+        'username': 'e6d79f87993e547822a8e38f',
+        'credential': '8hcmkqMZctdoqSfV',
+      },
+      {
+        'urls': 'turns:global.relay.metered.ca:443?transport=tcp',
+        'username': 'e6d79f87993e547822a8e38f',
+        'credential': '8hcmkqMZctdoqSfV',
       },
     ],
     'sdpSemantics': 'unified-plan',
+    'iceTransportPolicy': 'all',
   };
 
   Future<void> init(bool isVideoEnabled) async {
@@ -61,8 +68,8 @@ class WebRTCService {
       });
       print('WebRTCService.init: Media stream acquired: ${_localStream?.id}');
     } catch (e) {
-      print('WebRTCService.init Error: $e');
-      rethrow;
+      print('WebRTCService.init Warning: $e. Proceeding as receive-only.');
+      _localStream = null;
     }
 
     _peerConnection = await createPeerConnection(_iceServers);
@@ -75,7 +82,7 @@ class WebRTCService {
           'candidate': candidate.candidate,
           'sdpMid': candidate.sdpMid,
           'sdpMLineIndex': candidate.sdpMLineIndex,
-        }
+        },
       });
     };
 
@@ -106,20 +113,35 @@ class WebRTCService {
     };
 
     // Add local tracks to peer connection
-    _localStream!.getTracks().forEach((track) {
-      _peerConnection!.addTrack(track, _localStream!);
-    });
+    if (_localStream != null) {
+      _localStream!.getTracks().forEach((track) {
+        _peerConnection!.addTrack(track, _localStream!);
+      });
+    } else {
+      // If no local media (e.g. no hardware), explicitly add transceivers
+      // to ensure we can still receive remote media and gather ICE candidates.
+      await _peerConnection!.addTransceiver(
+        kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
+        init: RTCRtpTransceiverInit(direction: TransceiverDirection.RecvOnly),
+      );
+      if (isVideoEnabled) {
+        await _peerConnection!.addTransceiver(
+          kind: RTCRtpMediaType.RTCRtpMediaTypeVideo,
+          init: RTCRtpTransceiverInit(direction: TransceiverDirection.RecvOnly),
+        );
+      }
+    }
   }
 
   Future<void> createOffer() async {
     if (_peerConnection == null) return;
-    RTCSessionDescription offer = await _peerConnection!.createOffer();
-    await _peerConnection!.setLocalDescription(offer);
-    
-    onSignalingData({
-      'type': 'call-offer',
-      'sdp': offer.sdp,
+    RTCSessionDescription offer = await _peerConnection!.createOffer({
+      'offerToReceiveAudio': true,
+      'offerToReceiveVideo': true,
     });
+    await _peerConnection!.setLocalDescription(offer);
+
+    onSignalingData({'type': 'call-offer', 'sdp': offer.sdp});
   }
 
   Future<void> handleOffer(String sdp) async {
@@ -131,11 +153,16 @@ class WebRTCService {
     RTCSessionDescription answer = await _peerConnection!.createAnswer();
     await _peerConnection!.setLocalDescription(answer);
 
-    onSignalingData({
-      'type': 'call-answer',
-      'sdp': answer.sdp,
-    });
+    onSignalingData({'type': 'call-answer', 'sdp': answer.sdp});
     _isRemoteDescriptionSet = true;
+    for (var candidate in _remoteCandidatesQueue) {
+      try {
+        await _peerConnection!.addCandidate(candidate);
+      } catch (e) {
+        print('WebRTCService Error adding queued candidate (Offer): $e');
+      }
+    }
+    _remoteCandidatesQueue.clear();
   }
 
   Future<void> handleAnswer(String sdp) async {
@@ -144,6 +171,14 @@ class WebRTCService {
       RTCSessionDescription(sdp, 'answer'),
     );
     _isRemoteDescriptionSet = true;
+    for (var candidate in _remoteCandidatesQueue) {
+      try {
+        await _peerConnection!.addCandidate(candidate);
+      } catch (e) {
+        print('WebRTCService Error adding queued candidate (Answer): $e');
+      }
+    }
+    _remoteCandidatesQueue.clear();
   }
 
   Future<void> handleIceCandidate(Map<String, dynamic> candidateMap) async {
@@ -153,7 +188,15 @@ class WebRTCService {
       candidateMap['sdpMid'],
       candidateMap['sdpMLineIndex'],
     );
-    await _peerConnection!.addCandidate(candidate);
+    if (!_isRemoteDescriptionSet) {
+      _remoteCandidatesQueue.add(candidate);
+    } else {
+      try {
+        await _peerConnection!.addCandidate(candidate);
+      } catch (e) {
+        print('WebRTCService Error adding candidate (Live): $e');
+      }
+    }
   }
 
   void toggleMute() {
@@ -187,5 +230,7 @@ class WebRTCService {
       _peerConnection = null;
     }
     _remoteStream = null;
+    _isRemoteDescriptionSet = false;
+    _remoteCandidatesQueue.clear();
   }
 }

@@ -6,19 +6,23 @@ import 'package:ephemeral_chat/providers/chat_providers.dart';
 import 'dart:async';
 
 void main() {
-  testWidgets('ChatScreen shows messages, input field and image button', (WidgetTester tester) async {
+  testWidgets('ChatScreen shows messages, input field and image button', (
+    WidgetTester tester,
+  ) async {
     final messagesController = StreamController<List<Map<String, dynamic>>>();
     final roomController = StreamController<Map<String, dynamic>?>();
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          messagesStreamProvider('test_room').overrideWith((ref) => messagesController.stream),
-          roomStreamProvider('test_room').overrideWith((ref) => roomController.stream),
+          messagesStreamProvider(
+            'test_room',
+          ).overrideWith((ref) => messagesController.stream),
+          roomStreamProvider(
+            'test_room',
+          ).overrideWith((ref) => roomController.stream),
         ],
-        child: const MaterialApp(
-          home: ChatScreen(roomId: 'test_room'),
-        ),
+        child: const MaterialApp(home: ChatScreen(roomId: 'test_room')),
       ),
     );
 
@@ -27,37 +31,47 @@ void main() {
 
     // Emit room data to keep the screen alive
     roomController.add({'id': 'test_room', 'status': 'active'});
-    
+
     // Emit some messages
     messagesController.add([
       {'id': '1', 'content': 'Hello world', 'type': 'text'},
-      {'id': '2', 'content': 'Image incoming', 'type': 'text'}
+      {'id': '2', 'content': 'Image incoming', 'type': 'text'},
     ]);
-    
+
     await tester.pumpAndSettle();
 
     // Verify UI elements
     expect(find.text('Hello world'), findsOneWidget);
     expect(find.text('Image incoming'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
-    expect(find.byIcon(Icons.image), findsOneWidget); // Assuming an image icon is used for the image button
-    expect(find.byIcon(Icons.send), findsOneWidget); // Assuming a send icon is used for the send button
+    expect(
+      find.byIcon(Icons.image),
+      findsOneWidget,
+    ); // Assuming an image icon is used for the image button
+    expect(
+      find.byIcon(Icons.send),
+      findsOneWidget,
+    ); // Assuming a send icon is used for the send button
   });
 
-  testWidgets('ChatScreen pops when room is destroyed (Realtime kick-out)', (WidgetTester tester) async {
+  testWidgets('ChatScreen pops when room is destroyed (Realtime kick-out)', (
+    WidgetTester tester,
+  ) async {
     final messagesController = StreamController<List<Map<String, dynamic>>>();
     final roomController = StreamController<Map<String, dynamic>?>();
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          messagesStreamProvider('test_room').overrideWith((ref) => messagesController.stream),
-          roomStreamProvider('test_room').overrideWith((ref) => roomController.stream),
+          messagesStreamProvider(
+            'test_room',
+          ).overrideWith((ref) => messagesController.stream),
+          roomStreamProvider(
+            'test_room',
+          ).overrideWith((ref) => roomController.stream),
         ],
         child: MaterialApp(
-          routes: {
-            '/': (context) => const Scaffold(body: Text('Home Screen')),
-          },
+          routes: {'/': (context) => const Scaffold(body: Text('Home Screen'))},
           onGenerateRoute: (settings) {
             if (settings.name == '/chat') {
               return MaterialPageRoute(
@@ -73,7 +87,7 @@ void main() {
 
     // Navigate to chat
     tester.state<NavigatorState>(find.byType(Navigator)).pushNamed('/chat');
-    
+
     // Emit empty messages list to avoid indefinite CircularProgressIndicator animation
     messagesController.add([]);
     await tester.pumpAndSettle();

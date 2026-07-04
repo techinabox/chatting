@@ -8,21 +8,27 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ephemeral_chat/providers/settings_provider.dart';
 
+import 'package:flutter/foundation.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseService.initialize();
-  
+  if (!kIsWeb) {
+    await MobileAds.instance.initialize();
+  }
+
   // 폰트를 미리 로드하여 처음에 글자가 깨져 보이는 현상을 방지합니다.
   GoogleFonts.notoSansKr();
   await GoogleFonts.pendingFonts();
-  
+
   final prefs = await SharedPreferences.getInstance();
-  runApp(ProviderScope(
-    overrides: [
-      sharedPreferencesProvider.overrideWithValue(prefs),
-    ],
-    child: const MyApp(),
-  ));
+  runApp(
+    ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

@@ -15,17 +15,19 @@ class SupabaseService {
       // Ignored: missing .env will fallback to String.fromEnvironment
     }
 
-    final supabaseUrl = isDotEnvLoaded 
-        ? (dotenv.env['SUPABASE_URL'] ?? const String.fromEnvironment('SUPABASE_URL'))
+    final supabaseUrl = isDotEnvLoaded
+        ? (dotenv.env['SUPABASE_URL'] ??
+              const String.fromEnvironment('SUPABASE_URL'))
         : const String.fromEnvironment('SUPABASE_URL');
-        
+
     final supabaseAnonKey = isDotEnvLoaded
-        ? (dotenv.env['SUPABASE_ANON_KEY'] ?? const String.fromEnvironment('SUPABASE_ANON_KEY'))
+        ? (dotenv.env['SUPABASE_ANON_KEY'] ??
+              const String.fromEnvironment('SUPABASE_ANON_KEY'))
         : const String.fromEnvironment('SUPABASE_ANON_KEY');
 
     await Supabase.initialize(
       url: supabaseUrl,
-      anonKey: supabaseAnonKey,
+      publishableKey: supabaseAnonKey,
     );
   }
 }

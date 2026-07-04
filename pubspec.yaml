@@ -46,6 +46,7 @@ dependencies:
   crop_your_image: ^2.0.0
   flutter_webrtc: ^1.5.2
   permission_handler: ^12.0.3
+  google_mobile_ads: ^9.0.0
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +64,7 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
+  supabase: any
 flutter:
 
   # The following line ensures that the Material Icons font is

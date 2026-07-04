@@ -69,7 +69,10 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                   children: [
                     CircularProgressIndicator(color: Colors.white),
                     SizedBox(height: 16),
-                    Text('Connecting Video...', style: TextStyle(color: Colors.white, fontSize: 18)),
+                    Text(
+                      'Connecting Video...',
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
                   ],
                 ),
               )
@@ -80,7 +83,10 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                   children: [
                     Icon(Icons.person, size: 100, color: Colors.grey),
                     SizedBox(height: 16),
-                    Text('Voice Call', style: TextStyle(color: Colors.white, fontSize: 24)),
+                    Text(
+                      'Voice Call',
+                      style: TextStyle(color: Colors.white, fontSize: 24),
+                    ),
                   ],
                 ),
               ),
@@ -103,7 +109,8 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                     child: RTCVideoView(
                       _localRenderer,
                       mirror: true,
-                      objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                      objectFit:
+                          RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
                     ),
                   ),
                 ),
@@ -124,40 +131,46 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                   ),
                   Text(
                     'Sent ICE: ${callState.localIceCount} | Rcvd ICE: ${callState.remoteIceCount}',
-                    style: const TextStyle(color: Colors.cyanAccent, fontSize: 12),
+                    style: const TextStyle(
+                      color: Colors.cyanAccent,
+                      fontSize: 12,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                  FloatingActionButton(
-                    heroTag: 'mute',
-                    backgroundColor: Colors.white30,
-                    onPressed: () {
-                      ref.read(callProvider.notifier).toggleMute();
-                    },
-                    child: const Icon(Icons.mic_off, color: Colors.white),
-                  ),
-                  FloatingActionButton(
-                    heroTag: 'video',
-                    backgroundColor: Colors.white30,
-                    onPressed: () {
-                      ref.read(callProvider.notifier).toggleVideo();
-                    },
-                    child: const Icon(Icons.videocam_off, color: Colors.white),
-                  ),
-                  FloatingActionButton(
-                    heroTag: 'end',
-                    backgroundColor: Colors.red,
-                    onPressed: () {
-                      ref.read(callProvider.notifier).endCall();
-                    },
-                    child: const Icon(Icons.call_end, color: Colors.white),
+                      FloatingActionButton(
+                        heroTag: 'mute',
+                        backgroundColor: Colors.white30,
+                        onPressed: () {
+                          ref.read(callProvider.notifier).toggleMute();
+                        },
+                        child: const Icon(Icons.mic_off, color: Colors.white),
+                      ),
+                      FloatingActionButton(
+                        heroTag: 'video',
+                        backgroundColor: Colors.white30,
+                        onPressed: () {
+                          ref.read(callProvider.notifier).toggleVideo();
+                        },
+                        child: const Icon(
+                          Icons.videocam_off,
+                          color: Colors.white,
+                        ),
+                      ),
+                      FloatingActionButton(
+                        heroTag: 'end',
+                        backgroundColor: Colors.red,
+                        onPressed: () {
+                          ref.read(callProvider.notifier).endCall();
+                        },
+                        child: const Icon(Icons.call_end, color: Colors.white),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-            ),
             ),
           ],
         ),

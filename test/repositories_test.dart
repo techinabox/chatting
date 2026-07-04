@@ -16,17 +16,17 @@ void main() {
   group('RoomRepository', () {
     test('should exist and have createRoom and joinRoom methods', () {
       final repository = RoomRepository(client: mockClient);
-      
-      expect(repository.createRoom(), isA<Future<void>>());
-      expect(repository.joinRoom(), isA<Future<void>>());
+
+      expect(repository.createRoom('test', 'owner', 'name', 'emoji'), isA<Future<Map<String, String>>>());
+      expect(repository.joinRoom('code', 'room_name', 'name', 'emoji'), isA<Future<String>>());
     });
   });
 
   group('MessageRepository', () {
     test('should exist and have sendMessage method', () {
       final repository = MessageRepository(client: mockClient);
-      
-      expect(repository.sendMessage(), isA<Future<void>>());
+
+      expect(repository.sendMessage(roomId: 'room', senderName: 'name', senderEmoji: 'emoji'), isA<Future<void>>());
     });
   });
 }
