@@ -11,6 +11,7 @@ import 'package:ephemeral_chat/screens/chat_screen.dart';
 import 'package:ephemeral_chat/screens/settings_screen.dart';
 import '../theme/app_colors.dart';
 import 'package:ephemeral_chat/providers/module_providers.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 String _formatTimestamp(String? isoString) {
   if (isoString == null || isoString.isEmpty) return '';
@@ -236,6 +237,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final currentFilter = ref.watch(homeFilterProvider);
     final tabIndex = ref.watch(homeTabIndexProvider);
     final themeConfig = ref.watch(chatModuleConfigProvider);
+    final isNeon = themeConfig.themeName == 'neon_silence';
 
     return Scaffold(
       backgroundColor: themeConfig.homeBackgroundColor,
@@ -243,26 +245,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         backgroundColor: themeConfig.homeBackgroundColor,
         elevation: 0,
         title: Text(
-          tabIndex == 0 ? '즐겨찾기' : '채팅',
-          style: TextStyle(
-            color: themeConfig.homeTextColor,
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
+          'FadeChat',
+          style: GoogleFonts.hankenGrotesk(
+            color: isNeon ? Colors.white : themeConfig.homeTextColor,
+            fontWeight: FontWeight.w700,
+            fontSize: 28,
+            letterSpacing: -1,
           ),
         ),
         actions: [
           IconButton(
             icon: Icon(
-              Icons.add_comment_outlined,
-              color: themeConfig.homeTextColor,
+              Icons.add_circle_outline,
+              color: isNeon ? themeConfig.sendButtonColor : themeConfig.homeTextColor,
             ),
             tooltip: 'Create Room',
             onPressed: () => _createRoom(context, ref),
           ),
           IconButton(
             icon: Icon(
-              Icons.group_add_outlined,
-              color: themeConfig.homeTextColor,
+              Icons.meeting_room_outlined,
+              color: isNeon ? themeConfig.sendButtonColor : themeConfig.homeTextColor,
             ),
             tooltip: 'Join Room',
             onPressed: () => _showJoinRoomDialog(context),
@@ -271,9 +274,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       body: roomsAsync.when(
         data: (asyncRooms) {
-          final allRooms = tabIndex == 0
-              ? asyncRooms.where((r) => r['is_favorite'] == true).toList()
-              : asyncRooms.toList();
+          final allRooms = asyncRooms.toList();
 
           final unreadTotalCount = allRooms.fold<int>(
             0,
@@ -291,16 +292,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    tabIndex == 0
-                        ? Icons.star_border
-                        : Icons.chat_bubble_outline,
+                    Icons.chat_bubble_outline,
                     size: 60,
-                    color: Colors.grey.shade400,
+                    color: Colors.grey.shade700,
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    tabIndex == 0 ? '즐겨찾기한 채팅방이 없습니다.' : '참여 중인 채팅방이 없습니다.',
-                    style: TextStyle(color: Colors.grey.shade600),
+                    'No active chats.',
+                    style: TextStyle(color: Colors.grey.shade500),
                   ),
                 ],
               ),
@@ -308,24 +307,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           }
 
           return ListView.builder(
-            itemCount: filteredRooms.length + 2, // 2 extra for chips and ad
+            itemCount: filteredRooms.length + 3, // 3 extra for chips, search, ad
             itemBuilder: (context, index) {
               if (index == 0) {
                 // Filter Chips
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 8.0,
-                  ),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                   child: Row(
                     children: [
                       GestureDetector(
                         onTap: () =>
                             ref.read(homeFilterProvider.notifier).state = '전체',
                         child: _buildChip(
-                          '전체',
+                          'All',
                           isSelected: currentFilter == '전체',
+                          isNeon: isNeon,
+                          themeConfig: themeConfig,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -333,11 +330,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         onTap: () =>
                             ref.read(homeFilterProvider.notifier).state = '안읽음',
                         child: _buildChip(
-                          '안읽음',
+                          'Unread',
                           badgeCount: unreadTotalCount > 0
                               ? unreadTotalCount
                               : null,
                           isSelected: currentFilter == '안읽음',
+                          isNeon: isNeon,
+                          themeConfig: themeConfig,
                         ),
                       ),
                     ],
@@ -345,6 +344,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 );
               }
               if (index == 1) {
+                // Search Bar
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isNeon ? const Color(0xFF1E1E1E) : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: TextField(
+                      style: TextStyle(color: isNeon ? Colors.white : Colors.black),
+                      decoration: InputDecoration(
+                        icon: Icon(Icons.search, color: isNeon ? Colors.grey.shade500 : Colors.grey),
+                        hintText: 'Search...',
+                        hintStyle: TextStyle(color: isNeon ? Colors.grey.shade500 : Colors.grey),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                );
+              }
+              if (index == 2) {
                 // Ad Banner
                 return const AdBannerWidget();
               }
@@ -382,7 +403,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
+                          color: isNeon ? const Color(0xFF2A2A2A) : Colors.grey.shade300,
                           shape: BoxShape.circle,
                           image: avatarUrl != null && avatarUrl.isNotEmpty
                               ? DecorationImage(
@@ -397,9 +418,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   emoji != null && emoji.isNotEmpty
                                       ? emoji
                                       : roomName.characters.first,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 20,
-                                    color: Colors.black54,
+                                    color: isNeon ? Colors.white : Colors.black54,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -420,7 +441,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
-                                      color: themeConfig.homeTextColor,
+                                      color: isNeon ? Colors.white : themeConfig.homeTextColor,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -472,34 +493,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   room['created_at']?.toString(),
                             ),
                             style: TextStyle(
-                              color: themeConfig.homeSubtextColor,
+                              color: isNeon ? Colors.grey.shade500 : themeConfig.homeSubtextColor,
                               fontSize: 12,
                             ),
                           ),
                           const SizedBox(height: 6),
                           if (hasUnread)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: themeConfig.themeName == 'neon_silence'
-                                    ? themeConfig.sendButtonColor
-                                    : AppColors.kakaoHomeBadge,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                unreadCount > 99 ? '99+' : '$unreadCount',
-                                style: TextStyle(
-                                  color: themeConfig.themeName == 'neon_silence'
-                                      ? themeConfig.backgroundColor
-                                      : Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                            isNeon 
+                              ? Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF03DAC6), // Neon Cyan
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Color(0xFF03DAC6),
+                                        blurRadius: 4,
+                                        spreadRadius: 1,
+                                      )
+                                    ],
+                                  ),
+                                )
+                              : Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.kakaoHomeBadge,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    unreadCount > 99 ? '99+' : '$unreadCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
                         ],
                       ),
                     ],
@@ -512,7 +545,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Error: $err')),
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: isNeon ? BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: themeConfig.homeBackgroundColor,
+        selectedItemColor: themeConfig.sendButtonColor,
+        unselectedItemColor: themeConfig.homeSubtextColor,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        currentIndex: tabIndex == 2 ? 1 : 0, // Maps custom logic
+        onTap: (index) {
+          if (index == 0) {
+            ref.read(homeTabIndexProvider.notifier).state = 1; // 1 is Chats conceptually
+          } else if (index == 1) {
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble),
+            label: 'Chats',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.more_horiz),
+            label: 'Settings',
+          ),
+        ],
+      ) : BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
         selectedItemColor: Colors.black87,
@@ -544,12 +604,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildChip(String label, {bool isSelected = false, int? badgeCount}) {
+  Widget _buildChip(String label, {bool isSelected = false, int? badgeCount, bool isNeon = false, dynamic themeConfig}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isSelected ? Colors.black87 : AppColors.kakaoHomeChipBackground,
-        border: isSelected
+        color: isNeon 
+            ? (isSelected ? themeConfig.homeTextColor : const Color(0xFF1E1E1E))
+            : (isSelected ? Colors.black87 : AppColors.kakaoHomeChipBackground),
+        border: (isSelected || isNeon)
             ? null
             : Border.all(color: AppColors.kakaoHomeChipBorder),
         borderRadius: BorderRadius.circular(20),
@@ -560,7 +622,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Text(
             label,
             style: TextStyle(
-              color: isSelected ? Colors.white : AppColors.kakaoHomeText,
+              color: isNeon 
+                  ? (isSelected ? Colors.black : Colors.white)
+                  : (isSelected ? Colors.white : AppColors.kakaoHomeText),
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               fontSize: 14,
             ),
@@ -571,14 +635,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
               decoration: BoxDecoration(
-                color: AppColors.kakaoHomeBadge,
+                color: isNeon ? themeConfig.sendButtonColor : AppColors.kakaoHomeBadge,
                 borderRadius: BorderRadius.circular(9),
               ),
               alignment: Alignment.center,
               child: Text(
                 '$badgeCount',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: isNeon ? Colors.black : Colors.white,
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                   height: 1.0,
@@ -665,58 +729,73 @@ class _JoinRoomDialogState extends ConsumerState<_JoinRoomDialog> {
     final themeConfig = ref.watch(chatModuleConfigProvider);
     final isNeon = themeConfig.themeName == 'neon_silence';
 
-    return AlertDialog(
-      backgroundColor: isNeon ? Colors.black87 : null,
+    return Dialog(
+      backgroundColor: isNeon ? const Color(0xFF131313) : Colors.white,
       shape: isNeon
           ? RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               side: BorderSide(
-                color: themeConfig.sendButtonColor.withValues(alpha: 0.5),
+                color: themeConfig.sendButtonColor.withOpacity(0.4),
+                width: 1,
               ),
             )
-          : null,
-      title: Text(
-        'Join Room',
-        style: TextStyle(color: isNeon ? themeConfig.homeTextColor : null),
-      ),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
+          : RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Form(
+          key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (isNeon) ...[
+                Text(
+                  'ENTER CODE TO JOIN IN',
+                  style: GoogleFonts.jetBrainsMono(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ] else ...[
+                const Text(
+                  'Join Room',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+              ],
               TextFormField(
                 controller: _codeController,
+                obscureText: isNeon, // show ******** like in design if neon
                 style: TextStyle(
-                  color: isNeon ? themeConfig.homeTextColor : null,
+                  color: isNeon ? themeConfig.sendButtonColor : Colors.black,
+                  fontSize: isNeon ? 24 : 16,
+                  letterSpacing: isNeon ? 8.0 : null,
+                  fontWeight: isNeon ? FontWeight.bold : null,
                 ),
-                decoration: InputDecoration(
-                  labelText: 'Invite Code',
-                  labelStyle: TextStyle(
-                    color: isNeon ? themeConfig.homeSubtextColor : null,
-                  ),
-                  border: isNeon
-                      ? OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: themeConfig.sendButtonColor,
-                          ),
-                        )
-                      : const OutlineInputBorder(),
-                  enabledBorder: isNeon
-                      ? OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: themeConfig.sendButtonColor.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                        )
-                      : null,
-                  prefixIcon: Icon(
-                    Icons.key,
-                    color: isNeon ? themeConfig.homeSubtextColor : null,
-                  ),
-                ),
+                textAlign: isNeon ? TextAlign.center : TextAlign.start,
+                decoration: isNeon
+                    ? InputDecoration(
+                        filled: true,
+                        fillColor: const Color(0xFF1E1E1E),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: themeConfig.sendButtonColor.withOpacity(0.3)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: themeConfig.sendButtonColor.withOpacity(0.3)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: themeConfig.sendButtonColor, width: 2),
+                        ),
+                      )
+                    : const InputDecoration(
+                        labelText: 'Invite Code',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.key),
+                      ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter an invite code';
@@ -730,170 +809,102 @@ class _JoinRoomDialogState extends ConsumerState<_JoinRoomDialog> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                style: TextStyle(
-                  color: isNeon ? themeConfig.homeTextColor : null,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'My Room Name',
-                  labelStyle: TextStyle(
-                    color: isNeon ? themeConfig.homeSubtextColor : null,
-                  ),
-                  border: isNeon
-                      ? OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: themeConfig.sendButtonColor,
-                          ),
-                        )
-                      : const OutlineInputBorder(),
-                  enabledBorder: isNeon
-                      ? OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: themeConfig.sendButtonColor.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                        )
-                      : null,
-                  prefixIcon: Icon(
-                    Icons.title,
-                    color: isNeon ? themeConfig.homeSubtextColor : null,
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a name for the room';
-                  }
-                  return null;
-                },
-              ),
-              Divider(
-                height: 32,
-                color: isNeon
-                    ? themeConfig.sendButtonColor.withValues(alpha: 0.3)
-                    : null,
-              ),
-              Text(
-                'My Profile',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: isNeon ? themeConfig.homeTextColor : null,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _participantNameController,
-                style: TextStyle(
-                  color: isNeon ? themeConfig.homeTextColor : null,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Chatter ID',
-                  labelStyle: TextStyle(
-                    color: isNeon ? themeConfig.homeSubtextColor : null,
-                  ),
-                  border: isNeon
-                      ? OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: themeConfig.sendButtonColor,
-                          ),
-                        )
-                      : const OutlineInputBorder(),
-                  enabledBorder: isNeon
-                      ? OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: themeConfig.sendButtonColor.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                        )
-                      : null,
-                  prefixIcon: Icon(
-                    Icons.person,
-                    color: isNeon ? themeConfig.homeSubtextColor : null,
-                  ),
-                ),
-                validator: (value) => (value == null || value.trim().isEmpty)
-                    ? 'Enter your name'
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Animal Emoji',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isNeon ? themeConfig.homeSubtextColor : null,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8.0,
-                runSpacing: 8.0,
-                children: animalEmojis.map((emoji) {
-                  final isSelected = emoji == _selectedEmoji;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedEmoji = emoji),
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? (isNeon
-                                  ? themeConfig.sendButtonColor.withValues(
-                                      alpha: 0.2,
-                                    )
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.primaryContainer)
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: isSelected
-                              ? (isNeon
-                                    ? themeConfig.sendButtonColor
-                                    : Theme.of(context).colorScheme.primary)
-                              : (isNeon ? Colors.grey.shade800 : Colors.grey),
-                        ),
-                        borderRadius: BorderRadius.circular(8),
+              const SizedBox(height: 12),
+              if (isNeon)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.shield_outlined, color: themeConfig.homeSubtextColor, size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Alert: End-to-End Encrypted',
+                      style: TextStyle(
+                        color: themeConfig.homeSubtextColor,
+                        fontSize: 12,
                       ),
-                      child: Text(emoji, style: const TextStyle(fontSize: 24)),
                     ),
-                  );
-                }).toList(),
+                  ],
+                ),
+              const SizedBox(height: 24),
+              
+              // We hide Name and Emoji settings in Neon mode for a cleaner look, use defaults
+              if (!isNeon) ...[
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'My Room Name',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.title),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter a name for the room';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _participantNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Chatter ID',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person),
+                  ),
+                  validator: (value) => (value == null || value.trim().isEmpty) ? 'Enter your name' : null,
+                ),
+              ],
+              
+              if (!isNeon) const SizedBox(height: 16),
+              
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (!isNeon)
+                    TextButton(
+                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                  if (isNeon)
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: themeConfig.homeSubtextColor.withOpacity(0.3)),
+                          foregroundColor: themeConfig.homeSubtextColor,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: const Text('CANCEL'),
+                      ),
+                    ),
+                  if (isNeon) const SizedBox(width: 12),
+                  if (isNeon)
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _isLoading ? null : _submit,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: themeConfig.sendButtonColor,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                            : const Text('JOIN IN', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    )
+                  else
+                    FilledButton(
+                      onPressed: _isLoading ? null : _submit,
+                      child: _isLoading
+                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Text('Join Room'),
+                    ),
+                ],
               ),
             ],
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          style: isNeon
-              ? TextButton.styleFrom(
-                  foregroundColor: themeConfig.homeSubtextColor,
-                )
-              : null,
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _isLoading ? null : _submit,
-          style: isNeon
-              ? FilledButton.styleFrom(
-                  backgroundColor: themeConfig.sendButtonColor,
-                  foregroundColor: themeConfig.backgroundColor,
-                )
-              : null,
-          child: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Text('Join'),
-        ),
-      ],
     );
   }
 }
@@ -969,241 +980,191 @@ class _CreateRoomDialogState extends ConsumerState<_CreateRoomDialog> {
     final themeConfig = ref.watch(chatModuleConfigProvider);
     final isNeon = themeConfig.themeName == 'neon_silence';
 
-    return AlertDialog(
-      backgroundColor: isNeon ? Colors.black87 : null,
+    return Dialog(
+      backgroundColor: isNeon ? const Color(0xFF131313) : Colors.white,
       shape: isNeon
           ? RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               side: BorderSide(
-                color: themeConfig.sendButtonColor.withValues(alpha: 0.5),
+                color: themeConfig.sendButtonColor.withOpacity(0.4),
+                width: 1,
               ),
             )
-          : null,
-      title: Text(
-        'Create Room',
-        style: TextStyle(color: isNeon ? themeConfig.homeTextColor : null),
-      ),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                style: TextStyle(
-                  color: isNeon ? themeConfig.homeTextColor : null,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Room Name',
-                  labelStyle: TextStyle(
-                    color: isNeon ? themeConfig.homeSubtextColor : null,
+          : RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isNeon) ...[
+                  Text(
+                    'CREATE NEW ROOM',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                      fontSize: 14,
+                    ),
                   ),
-                  border: isNeon
-                      ? OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: themeConfig.sendButtonColor,
+                  const SizedBox(height: 24),
+                ] else ...[
+                  const Text(
+                    'Create Room',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                TextFormField(
+                  controller: _nameController,
+                  style: TextStyle(
+                    color: isNeon ? Colors.white : Colors.black,
+                  ),
+                  decoration: isNeon
+                      ? InputDecoration(
+                          labelText: 'Room Name',
+                          labelStyle: TextStyle(color: themeConfig.homeSubtextColor),
+                          filled: true,
+                          fillColor: const Color(0xFF1E1E1E),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: themeConfig.sendButtonColor.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: themeConfig.sendButtonColor.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: themeConfig.sendButtonColor, width: 2),
                           ),
                         )
-                      : const OutlineInputBorder(),
-                  enabledBorder: isNeon
-                      ? OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: themeConfig.sendButtonColor.withValues(
-                              alpha: 0.5,
-                            ),
+                      : const InputDecoration(
+                          labelText: 'Room Name',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.title),
+                        ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter a room name';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  initialValue: _deletePermission,
+                  dropdownColor: isNeon ? const Color(0xFF1E1E1E) : null,
+                  style: TextStyle(
+                    color: isNeon ? Colors.white : Colors.black,
+                  ),
+                  decoration: isNeon
+                      ? InputDecoration(
+                          labelText: 'Delete Permission',
+                          labelStyle: TextStyle(color: themeConfig.homeSubtextColor),
+                          filled: true,
+                          fillColor: const Color(0xFF1E1E1E),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: themeConfig.sendButtonColor.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: themeConfig.sendButtonColor.withOpacity(0.3)),
                           ),
                         )
-                      : null,
-                  prefixIcon: Icon(
-                    Icons.title,
-                    color: isNeon ? themeConfig.homeSubtextColor : null,
-                  ),
+                      : const InputDecoration(
+                          labelText: 'Delete Permission',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.delete_sweep),
+                        ),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'all',
+                      child: Text('모두 허용 (Allow All)', style: TextStyle(color: isNeon ? Colors.white : Colors.black)),
+                    ),
+                    DropdownMenuItem(
+                      value: 'own',
+                      child: Text('본인 메시지만 지우기 (Own Only)', style: TextStyle(color: isNeon ? Colors.white : Colors.black)),
+                    ),
+                    DropdownMenuItem(
+                      value: 'none',
+                      child: Text('모든 메시지 지울수 없음 (None)', style: TextStyle(color: isNeon ? Colors.white : Colors.black)),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setState(() => _deletePermission = value);
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a room name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                initialValue: _deletePermission,
-                dropdownColor: isNeon ? themeConfig.homeBackgroundColor : null,
-                style: TextStyle(
-                  color: isNeon ? themeConfig.homeTextColor : Colors.black,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Delete Permission',
-                  labelStyle: TextStyle(
-                    color: isNeon ? themeConfig.homeSubtextColor : null,
-                  ),
-                  border: isNeon
-                      ? OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: themeConfig.sendButtonColor,
-                          ),
-                        )
-                      : const OutlineInputBorder(),
-                  enabledBorder: isNeon
-                      ? OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: themeConfig.sendButtonColor.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                        )
-                      : null,
-                  prefixIcon: Icon(
-                    Icons.delete_sweep,
-                    color: isNeon ? themeConfig.homeSubtextColor : null,
-                  ),
-                ),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'all',
-                    child: Text('모두 허용 (Allow All)'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'own',
-                    child: Text('본인 메시지만 지우기 (Own Only)'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'none',
-                    child: Text('모든 메시지 지울수 없음 (None)'),
+                
+                // Hide Profile settings in Neon for simplicity, or just show them if needed. 
+                // We'll hide them to match minimalist look.
+                if (!isNeon) ...[
+                  const SizedBox(height: 24),
+                  const Text('My Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _participantNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Chatter ID',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.person),
+                    ),
+                    validator: (value) => (value == null || value.trim().isEmpty) ? 'Enter your name' : null,
                   ),
                 ],
-                onChanged: (value) {
-                  if (value != null) setState(() => _deletePermission = value);
-                },
-              ),
-              Divider(
-                height: 32,
-                color: isNeon
-                    ? themeConfig.sendButtonColor.withValues(alpha: 0.3)
-                    : null,
-              ),
-              Text(
-                'My Profile',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: isNeon ? themeConfig.homeTextColor : null,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _participantNameController,
-                style: TextStyle(
-                  color: isNeon ? themeConfig.homeTextColor : null,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Chatter ID',
-                  labelStyle: TextStyle(
-                    color: isNeon ? themeConfig.homeSubtextColor : null,
-                  ),
-                  border: isNeon
-                      ? OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: themeConfig.sendButtonColor,
-                          ),
-                        )
-                      : const OutlineInputBorder(),
-                  enabledBorder: isNeon
-                      ? OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: themeConfig.sendButtonColor.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                        )
-                      : null,
-                  prefixIcon: Icon(
-                    Icons.person,
-                    color: isNeon ? themeConfig.homeSubtextColor : null,
-                  ),
-                ),
-                validator: (value) => (value == null || value.trim().isEmpty)
-                    ? 'Enter your name'
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Animal Emoji',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isNeon ? themeConfig.homeSubtextColor : null,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8.0,
-                runSpacing: 8.0,
-                children: animalEmojis.map((emoji) {
-                  final isSelected = emoji == _selectedEmoji;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedEmoji = emoji),
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? (isNeon
-                                  ? themeConfig.sendButtonColor.withValues(
-                                      alpha: 0.2,
-                                    )
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.primaryContainer)
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: isSelected
-                              ? (isNeon
-                                    ? themeConfig.sendButtonColor
-                                    : Theme.of(context).colorScheme.primary)
-                              : (isNeon ? Colors.grey.shade800 : Colors.grey),
-                        ),
-                        borderRadius: BorderRadius.circular(8),
+                
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (!isNeon)
+                      TextButton(
+                        onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                        child: const Text('Cancel'),
                       ),
-                      child: Text(emoji, style: const TextStyle(fontSize: 24)),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
+                    if (isNeon)
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: themeConfig.homeSubtextColor.withOpacity(0.3)),
+                            foregroundColor: themeConfig.homeSubtextColor,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: const Text('CANCEL'),
+                        ),
+                      ),
+                    if (isNeon) const SizedBox(width: 12),
+                    if (isNeon)
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: _isLoading ? null : _submit,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: themeConfig.sendButtonColor,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                              : const Text('CREATE', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      )
+                    else
+                      FilledButton(
+                        onPressed: _isLoading ? null : _submit,
+                        child: _isLoading
+                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : const Text('Create'),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          style: isNeon
-              ? TextButton.styleFrom(
-                  foregroundColor: themeConfig.homeSubtextColor,
-                )
-              : null,
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _isLoading ? null : _submit,
-          style: isNeon
-              ? FilledButton.styleFrom(
-                  backgroundColor: themeConfig.sendButtonColor,
-                  foregroundColor: themeConfig.backgroundColor,
-                )
-              : null,
-          child: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Text('Create'),
-        ),
-      ],
     );
   }
 }
