@@ -91,7 +91,7 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
         margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         height: 50,
         decoration: BoxDecoration(
-          color: AppColors.kakaoHomeAdBackground,
+          color: const Color(0xFF2C2C2C),
           borderRadius: BorderRadius.circular(12),
         ),
         alignment: Alignment.center,
@@ -99,8 +99,8 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
           'Google Ad (Web Placeholder)',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppColors.kakaoHomeText,
-            fontSize: 16,
+            color: Colors.white70,
+            fontSize: 14,
           ),
         ),
       );
@@ -256,16 +256,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         actions: [
           IconButton(
             icon: Icon(
-              Icons.add_circle_outline,
-              color: isNeon ? themeConfig.sendButtonColor : themeConfig.homeTextColor,
+              Icons.chat_outlined,
+              color: isNeon ? themeConfig.homeSubtextColor : themeConfig.homeTextColor,
             ),
             tooltip: 'Create Room',
             onPressed: () => _createRoom(context, ref),
           ),
           IconButton(
             icon: Icon(
-              Icons.meeting_room_outlined,
-              color: isNeon ? themeConfig.sendButtonColor : themeConfig.homeTextColor,
+              Icons.person_add_outlined,
+              color: isNeon ? themeConfig.homeSubtextColor : themeConfig.homeTextColor,
             ),
             tooltip: 'Join Room',
             onPressed: () => _showJoinRoomDialog(context),
@@ -319,7 +319,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         onTap: () =>
                             ref.read(homeFilterProvider.notifier).state = '전체',
                         child: _buildChip(
-                          'All',
+                          '전체',
                           isSelected: currentFilter == '전체',
                           isNeon: isNeon,
                           themeConfig: themeConfig,
@@ -330,7 +330,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         onTap: () =>
                             ref.read(homeFilterProvider.notifier).state = '안읽음',
                         child: _buildChip(
-                          'Unread',
+                          '안읽음',
                           badgeCount: unreadTotalCount > 0
                               ? unreadTotalCount
                               : null,
@@ -345,20 +345,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               }
               if (index == 1) {
                 // Search Bar
+                if (isNeon) return const SizedBox.shrink();
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isNeon ? const Color(0xFF1E1E1E) : Colors.grey.shade200,
+                      color: Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(24),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: TextField(
-                      style: TextStyle(color: isNeon ? Colors.white : Colors.black),
-                      decoration: InputDecoration(
-                        icon: Icon(Icons.search, color: isNeon ? Colors.grey.shade500 : Colors.grey),
+                      style: const TextStyle(color: Colors.black),
+                      decoration: const InputDecoration(
+                        icon: Icon(Icons.search, color: Colors.grey),
                         hintText: 'Search...',
-                        hintStyle: TextStyle(color: isNeon ? Colors.grey.shade500 : Colors.grey),
+                        hintStyle: TextStyle(color: Colors.grey),
                         border: InputBorder.none,
                       ),
                     ),
@@ -371,7 +372,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               }
 
               // Chat Item
-              final room = filteredRooms[index - 2];
+              final room = filteredRooms[index - 3];
               final roomId = room['id'].toString();
               final roomName = room['name']?.toString() ?? 'Unnamed Room';
               final latestMsg = room['latest_message'] as Map<String, dynamic>?;
@@ -398,34 +399,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   child: Row(
                     children: [
-                      // Avatar
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: isNeon ? const Color(0xFF2A2A2A) : Colors.grey.shade300,
-                          shape: BoxShape.circle,
-                          image: avatarUrl != null && avatarUrl.isNotEmpty
-                              ? DecorationImage(
-                                  image: NetworkImage(avatarUrl),
-                                  fit: BoxFit.cover,
-                                )
-                              : null,
-                        ),
-                        child: avatarUrl == null || avatarUrl.isEmpty
-                            ? Center(
-                                child: Text(
-                                  emoji != null && emoji.isNotEmpty
-                                      ? emoji
-                                      : roomName.characters.first,
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    color: isNeon ? Colors.white : Colors.black54,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                      Stack(
+                        children: [
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: isNeon ? const Color(0xFF2A2A2A) : Colors.grey.shade300,
+                              shape: BoxShape.circle,
+                              image: avatarUrl != null && avatarUrl.isNotEmpty
+                                  ? DecorationImage(
+                                      image: NetworkImage(avatarUrl),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                            ),
+                            child: avatarUrl == null || avatarUrl.isEmpty
+                                ? Center(
+                                    child: Text(
+                                      emoji != null && emoji.isNotEmpty
+                                          ? emoji
+                                          : roomName.characters.first,
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        color: isNeon ? Colors.white : Colors.black54,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          if (isNeon && hasUnread)
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF03DAC6),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: themeConfig.homeBackgroundColor, width: 2),
                                 ),
-                              )
-                            : null,
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(width: 16),
                       // Content
@@ -499,40 +517,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           const SizedBox(height: 6),
                           if (hasUnread)
-                            isNeon 
-                              ? Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF03DAC6), // Neon Cyan
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Color(0xFF03DAC6),
-                                        blurRadius: 4,
-                                        spreadRadius: 1,
-                                      )
-                                    ],
-                                  ),
-                                )
-                              : Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.kakaoHomeBadge,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    unreadCount > 99 ? '99+' : '$unreadCount',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isNeon ? const Color(0xFF03DAC6) : AppColors.kakaoHomeBadge,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                unreadCount > 99 ? '99+' : '$unreadCount',
+                                style: TextStyle(
+                                  color: isNeon ? Colors.black : Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
                                 ),
+                              ),
+                            ),
                         ],
                       ),
                     ],
@@ -552,17 +554,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         unselectedItemColor: themeConfig.homeSubtextColor,
         showSelectedLabels: false,
         showUnselectedLabels: false,
-        currentIndex: tabIndex == 2 ? 1 : 0, // Maps custom logic
+        currentIndex: tabIndex,
         onTap: (index) {
-          if (index == 0) {
-            ref.read(homeTabIndexProvider.notifier).state = 1; // 1 is Chats conceptually
-          } else if (index == 1) {
+          if (index == 0 || index == 1) {
+            ref.read(homeTabIndexProvider.notifier).state = index;
+          } else if (index == 2) {
             Navigator.of(
               context,
             ).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
           }
         },
         items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.star_border),
+            label: 'Favorites',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.chat_bubble),
             label: 'Chats',
