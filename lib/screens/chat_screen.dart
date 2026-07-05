@@ -251,23 +251,98 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _confirmCloseRoom() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Close Room'),
-        content: const Text(
-          'Are you sure you want to close this room? This will permanently delete the room and all messages for everyone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+      builder: (context) {
+        final themeConfig = ref.read(chatModuleConfigProvider);
+        final isNeon = themeConfig.themeName == 'neon_silence';
+
+        if (isNeon) {
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1C23), // Darker sleek background
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.local_fire_department,
+                    color: Color(0xFFB388FF), // Neon Purple
+                    size: 48,
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'All data will be permanently wiped for\nall parties.',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 48),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFB388FF),
+                        foregroundColor: Colors.black87,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'DESTRUCT ROOM',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white38,
+                    ),
+                    child: const Text(
+                      'ABORT',
+                      style: TextStyle(
+                        fontSize: 12,
+                        letterSpacing: 2.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return AlertDialog(
+          title: const Text('Close Room'),
+          content: const Text(
+            'Are you sure you want to close this room? This will permanently delete the room and all messages for everyone.',
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Close Room'),
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Close Room'),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirm == true) {
@@ -295,65 +370,65 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           return Dialog(
             backgroundColor: Colors.transparent,
             child: Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               decoration: BoxDecoration(
-                color: Colors.black,
+                color: const Color(0xFF1A1C23), // Darker sleek background
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.redAccent.withValues(alpha: 0.5),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.redAccent.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    spreadRadius: 2,
-                  ),
-                ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(
-                    Icons.warning_amber_rounded,
-                    color: Colors.redAccent,
+                    Icons.exit_to_app, // Exit icon for leaving
+                    color: Color(0xFFB388FF), // Neon Purple
                     size: 48,
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Destroy Room',
+                  const SizedBox(height: 24),
+                  const Text(
+                    'All your data will be permanently wiped\nfrom this room.',
                     style: TextStyle(
-                      color: themeConfig.homeTextColor,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      color: Colors.white70,
+                      fontSize: 13,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Are you sure you want to leave this room? All your messages and media will be permanently deleted. This action cannot be undone.',
-                    style: TextStyle(color: themeConfig.homeSubtextColor),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 32),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        style: TextButton.styleFrom(
-                          foregroundColor: themeConfig.homeSubtextColor,
+                  const SizedBox(height: 48),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFB388FF),
+                        foregroundColor: Colors.black87,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text('Cancel'),
                       ),
-                      const SizedBox(width: 8),
-                      FilledButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          foregroundColor: Colors.white,
+                      child: const Text(
+                        'LEAVE ROOM',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
                         ),
-                        child: const Text('Destroy'),
                       ),
-                    ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white38,
+                    ),
+                    child: const Text(
+                      'ABORT',
+                      style: TextStyle(
+                        fontSize: 12,
+                        letterSpacing: 2.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -537,7 +612,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
 
     if (otherOnlineUsers.length == 1) {
-      _startCall(isVideo, otherOnlineUsers.first['user_id']);
+      final targetUser = otherOnlineUsers.first;
+      final name = targetUser['participant_name']?.toString() ?? 'Unknown';
+      final avatarUrl = targetUser['participant_avatar_url']?.toString();
+      _startCall(isVideo, targetUser['user_id'], name, avatarUrl);
       return;
     }
 
@@ -576,7 +654,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   title: Text(name),
                   onTap: () {
                     Navigator.of(context).pop();
-                    _startCall(isVideo, targetUserId);
+                    _startCall(isVideo, targetUserId, name, avatarUrl);
                   },
                 );
               },
@@ -593,7 +671,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Future<void> _startCall(bool isVideo, String targetUserId) async {
+  Future<void> _startCall(bool isVideo, String targetUserId, String remoteUserName, String? remoteAvatarUrl) async {
     try {
       await ref
           .read(callProvider.notifier)
@@ -601,7 +679,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (mounted) {
         Navigator.of(
           context,
-        ).push(MaterialPageRoute(builder: (_) => const CallScreen()));
+        ).push(MaterialPageRoute(builder: (_) => CallScreen(
+          remoteUserName: remoteUserName,
+          remoteAvatarUrl: remoteAvatarUrl,
+        )));
       }
     } catch (e) {
       if (mounted) {
@@ -618,11 +699,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final moduleConfig = ref.watch(chatModuleConfigProvider);
+    final allParticipantsAsync = ref.watch(
+      allRoomParticipantsStreamProvider(widget.roomId),
+    );
 
     // Listen for incoming calls
     ref.listen<CallStateData>(callProvider, (previous, next) {
       if (previous?.state != CallState.ringing &&
           next.state == CallState.ringing) {
+        
+        String incomingName = 'Unknown';
+        String? incomingAvatarUrl;
+        if (allParticipantsAsync.value != null) {
+           final currentUserId = ref.read(supabaseClientProvider).auth.currentUser?.id;
+           try {
+             final caller = allParticipantsAsync.value!.firstWhere((p) => p['user_id'] != currentUserId);
+             incomingName = caller['participant_name']?.toString() ?? 'Unknown';
+             incomingAvatarUrl = caller['participant_avatar_url']?.toString();
+           } catch (_) {}
+        }
+        
         // Show incoming call dialog
         final isNeon = moduleConfig.themeName == 'neon_silence';
         showDialog(
@@ -707,7 +803,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               ref.read(callProvider.notifier).answerCall();
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => const CallScreen(),
+                                  builder: (_) => CallScreen(
+                                    remoteUserName: incomingName,
+                                    remoteAvatarUrl: incomingAvatarUrl,
+                                  ),
                                 ),
                               );
                             },
@@ -739,7 +838,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     Navigator.of(context).pop();
                     ref.read(callProvider.notifier).answerCall();
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const CallScreen()),
+                      MaterialPageRoute(builder: (_) => CallScreen(
+                        remoteUserName: incomingName,
+                        remoteAvatarUrl: incomingAvatarUrl,
+                      )),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -797,19 +899,42 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final participantAsync = ref.watch(
       roomParticipantStreamProvider(widget.roomId),
     );
-    final allParticipantsAsync = ref.watch(
-      allRoomParticipantsStreamProvider(widget.roomId),
-    );
     final fallbackName = ref.watch(defaultParticipantNameProvider);
     final fallbackEmoji = ref.watch(defaultParticipantEmojiProvider);
     final fallbackAvatarUrl = ref.watch(defaultParticipantAvatarProvider);
+
+    final presenceUsers = ref.watch(roomPresenceProvider(widget.roomId));
+    final currentUserId = ref.read(supabaseClientProvider).auth.currentUser?.id;
+    final isOtherUserOnline = presenceUsers.any((u) => u['user_id'] != currentUserId);
+    final dotColor = isOtherUserOnline ? const Color(0xFF03DAC6) : Colors.redAccent;
 
     return Scaffold(
       backgroundColor: moduleConfig.backgroundColor,
       appBar: AppBar(
         title: participantAsync.when(
-          data: (participant) =>
+          data: (participant) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (moduleConfig.themeName == 'neon_silence')
+                Container(
+                  width: 10,
+                  height: 10,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: dotColor,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: dotColor,
+                        blurRadius: 4,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                ),
               Text(participant?['room_name']?.toString() ?? 'Chat Room'),
+            ],
+          ),
           loading: () => const Text('Loading...'),
           error: (_, _) => const Text('Chat Room'),
         ),
@@ -826,57 +951,64 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 participantAsync.value?['room_name']?.toString() ?? '';
             final isFavorite = participantAsync.value?['is_favorite'] == true;
 
-            final actions = <Widget>[
-              IconButton(
-                icon: Icon(
-                  isFavorite ? Icons.star : Icons.star_border,
-                  color: Colors.amber,
-                ),
-                tooltip: isFavorite ? 'Unfavorite' : 'Favorite',
-                onPressed: () async {
-                  try {
-                    await ref
-                        .read(roomRepositoryProvider)
-                        .toggleFavorite(widget.roomId, !isFavorite);
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Failed to update favorite: $e'),
-                        ),
-                      );
+            final actions = <Widget>[];
+
+            if (moduleConfig.themeName != 'neon_silence') {
+              actions.addAll([
+                IconButton(
+                  icon: Icon(
+                    isFavorite ? Icons.star : Icons.star_border,
+                    color: Colors.amber,
+                  ),
+                  tooltip: isFavorite ? 'Unfavorite' : 'Favorite',
+                  onPressed: () async {
+                    try {
+                      await ref
+                          .read(roomRepositoryProvider)
+                          .toggleFavorite(widget.roomId, !isFavorite);
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to update favorite: $e'),
+                          ),
+                        );
+                      }
                     }
-                  }
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.call, color: Colors.green),
-                tooltip: 'Voice Call',
-                onPressed: () => _handleCallButton(false),
-              ),
-              IconButton(
-                icon: const Icon(Icons.videocam, color: Colors.green),
-                tooltip: 'Video Call',
-                onPressed: () => _handleCallButton(true),
-              ),
-              IconButton(
-                icon: const Icon(Icons.edit, color: Colors.blue),
-                tooltip: 'Edit Room Name',
-                onPressed: () => _showEditRoomNameDialog(currentName),
-              ),
-            ];
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.call, color: Colors.green),
+                  tooltip: 'Voice Call',
+                  onPressed: () => _handleCallButton(false),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.videocam, color: Colors.green),
+                  tooltip: 'Video Call',
+                  onPressed: () => _handleCallButton(true),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  tooltip: 'Edit Room Name',
+                  onPressed: () => _showEditRoomNameDialog(currentName),
+                ),
+              ]);
+
+              if (isCreator) {
+                actions.add(
+                  IconButton(
+                    icon: const Icon(Icons.copy, color: Colors.green),
+                    tooltip: 'Copy Invite Code',
+                    onPressed: () => _copyInviteCode(),
+                  ),
+                );
+              }
+            }
 
             if (isCreator) {
               actions.add(
                 IconButton(
-                  icon: const Icon(Icons.copy, color: Colors.green),
-                  tooltip: 'Copy Invite Code',
-                  onPressed: () => _copyInviteCode(),
-                ),
-              );
-              actions.add(
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.red),
+                  icon: Icon(Icons.close, color: moduleConfig.themeName == 'neon_silence' ? Colors.white54 : Colors.red),
                   tooltip: 'Close Room',
                   onPressed: () => _confirmCloseRoom(),
                 ),
@@ -884,7 +1016,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             } else {
               actions.add(
                 IconButton(
-                  icon: const Icon(Icons.exit_to_app, color: Colors.orange),
+                  icon: Icon(moduleConfig.themeName == 'neon_silence' ? Icons.close : Icons.exit_to_app, color: moduleConfig.themeName == 'neon_silence' ? Colors.white54 : Colors.orange),
                   tooltip: 'Leave Room',
                   onPressed: () => _confirmLeaveRoom(),
                 ),
@@ -909,8 +1041,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
                 return ListView.builder(
                   reverse: true,
-                  itemCount: messages.length,
+                  itemCount: messages.length + (moduleConfig.themeName == 'neon_silence' ? 1 : 0),
                   itemBuilder: (context, index) {
+                    if (moduleConfig.themeName == 'neon_silence' && index == messages.length) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(vertical: 24),
+                        alignment: Alignment.center,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E1E1E),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.lock_outline, color: Colors.white38, size: 12),
+                              SizedBox(width: 6),
+                              Text(
+                                'END-TO-END ENCRYPTED SESSION',
+                                style: TextStyle(
+                                  color: Colors.white38,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
                     final message = messages[index];
                     final userId = ref
                         .read(supabaseClientProvider)
@@ -971,16 +1132,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         color: isMe
                             ? moduleConfig.myBubbleColor
                             : moduleConfig.otherBubbleColor,
+                        border: isMe && moduleConfig.themeName == 'neon_silence'
+                            ? Border.all(color: moduleConfig.sendButtonColor.withValues(alpha: 0.3), width: 1)
+                            : null,
                         borderRadius: moduleConfig.themeName == 'neon_silence'
                             ? BorderRadius.only(
-                                topLeft: const Radius.circular(24),
-                                topRight: const Radius.circular(24),
+                                topLeft: const Radius.circular(20),
+                                topRight: const Radius.circular(20),
                                 bottomLeft: isMe
-                                    ? const Radius.circular(24)
-                                    : const Radius.circular(0),
+                                    ? const Radius.circular(20)
+                                    : const Radius.circular(4),
                                 bottomRight: isMe
-                                    ? const Radius.circular(0)
-                                    : const Radius.circular(24),
+                                    ? const Radius.circular(4)
+                                    : const Radius.circular(20),
                               )
                             : BorderRadius.only(
                                 topLeft: const Radius.circular(16),
@@ -992,7 +1156,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                     ? const Radius.circular(4)
                                     : const Radius.circular(16),
                               ),
-                        boxShadow: [
+                        boxShadow: moduleConfig.themeName == 'neon_silence' ? [] : [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 2,
@@ -1179,47 +1343,75 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                     ),
                                   ),
                                 ),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (isMe)
+                                Column(
+                                  crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        if (canDeleteMessage && isMe)
+                                          Padding(
+                                            padding: const EdgeInsets.only(right: 8.0),
+                                            child: IconButton(
+                                              icon: Icon(
+                                                Icons.delete_outline,
+                                                color: moduleConfig.themeName == 'neon_silence' ? Colors.white38 : Colors.black38,
+                                                size: 16,
+                                              ),
+                                              padding: EdgeInsets.zero,
+                                              constraints: const BoxConstraints(),
+                                              onPressed: () => _confirmDeleteMessage(message['id'].toString()),
+                                            ),
+                                          ),
+                                        Flexible(child: bubbleContent),
+                                        if (canDeleteMessage && !isMe)
+                                          Padding(
+                                            padding: const EdgeInsets.only(left: 8.0),
+                                            child: IconButton(
+                                              icon: Icon(
+                                                Icons.delete_outline,
+                                                color: moduleConfig.themeName == 'neon_silence' ? Colors.white38 : Colors.black38,
+                                                size: 16,
+                                              ),
+                                              padding: EdgeInsets.zero,
+                                              constraints: const BoxConstraints(),
+                                              onPressed: () => _confirmDeleteMessage(message['id'].toString()),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                     Padding(
-                                      padding: const EdgeInsets.only(
-                                        right: 4.0,
+                                      padding: EdgeInsets.only(
+                                        right: isMe ? 4.0 : 0,
+                                        left: isMe ? 0 : 4.0,
                                         bottom: 8.0,
                                       ),
-                                      child: Text(
-                                        _formatTimestamp(
-                                          message['created_at']?.toString(),
-                                        ),
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: moduleConfig.dateTextColor,
-                                        ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (isMe && moduleConfig.themeName == 'neon_silence') ...[
+                                            const Icon(Icons.timer_outlined, color: Colors.white38, size: 10),
+                                            const SizedBox(width: 4),
+                                          ],
+                                          Text(
+                                            _formatTimestamp(message['created_at']?.toString()),
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: moduleConfig.themeName == 'neon_silence' 
+                                                  ? Colors.white38 
+                                                  : moduleConfig.dateTextColor,
+                                              letterSpacing: 1.1,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  Flexible(child: bubbleContent),
-                                  if (!isMe)
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        left: 4.0,
-                                        bottom: 8.0,
-                                      ),
-                                      child: Text(
-                                        _formatTimestamp(
-                                          message['created_at']?.toString(),
-                                        ),
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: moduleConfig.dateTextColor,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                  ],
+                                ),
+                              ],
+                            ),
                         ),
                         if (isMe) ...[
                           const SizedBox(width: 8),
@@ -1251,47 +1443,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         mainAxisAlignment: isMe
                             ? MainAxisAlignment.end
                             : MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (canDeleteMessage && isMe)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                right: 4,
-                                bottom: 8,
-                              ),
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.delete_outline,
-                                  color: Colors.black38,
-                                  size: 20,
-                                ),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                onPressed: () => _confirmDeleteMessage(
-                                  message['id'].toString(),
-                                ),
-                              ),
-                            ),
                           Flexible(child: bubbleRow),
-                          if (canDeleteMessage && !isMe)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                left: 4,
-                                bottom: 8,
-                              ),
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.delete_outline,
-                                  color: Colors.black38,
-                                  size: 20,
-                                ),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                onPressed: () => _confirmDeleteMessage(
-                                  message['id'].toString(),
-                                ),
-                              ),
-                            ),
                         ],
                       ),
                     );
@@ -1372,104 +1526,226 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         },
                       ),
                     ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4.0,
-                      vertical: 4.0,
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        IconButton(
-                          icon: const Icon(
-                            Icons.add_box_outlined,
-                            color: Colors.grey,
-                            size: 30,
-                          ),
-                          onPressed: _isSending ? null : _pickImage,
-                        ),
-                        Expanded(
-                          child: Container(
-                            constraints: const BoxConstraints(maxHeight: 120),
-                            margin: const EdgeInsets.symmetric(vertical: 6.0),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0,
-                            ),
-                            decoration: BoxDecoration(
-                              color: moduleConfig.inputBackground,
-                              borderRadius: BorderRadius.circular(20),
-                              border: moduleConfig.themeName == 'neon_silence'
-                                  ? Border.all(
-                                      color: moduleConfig.sendButtonColor
-                                          .withValues(alpha: 0.5),
-                                      width: 1,
+                  if (moduleConfig.themeName == 'neon_silence')
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Input row
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.add, color: moduleConfig.sendButtonColor, size: 24),
+                                onPressed: _isSending ? null : _pickImage,
+                                padding: const EdgeInsets.only(right: 8),
+                                constraints: const BoxConstraints(),
+                              ),
+                              Expanded(
+                                child: TextField(
+                                  controller: _messageController,
+                                  style: TextStyle(color: moduleConfig.textColor, fontSize: 14),
+                                  maxLines: null,
+                                  keyboardType: TextInputType.multiline,
+                                  onSubmitted: _isSending ? null : (_) => _sendMessage(),
+                                  decoration: InputDecoration(
+                                    hintText: 'Transmit message...',
+                                    hintStyle: const TextStyle(color: Colors.white38, fontSize: 14),
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                                  ),
+                                ),
+                              ),
+                              _isSending
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
                                     )
-                                  : null,
+                                  : IconButton(
+                                      icon: Icon(Icons.send, color: moduleConfig.sendButtonColor, size: 20),
+                                      onPressed: _sendMessage,
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                    ),
+                            ],
+                          ),
+                          // Divider
+                          Divider(color: Colors.white.withValues(alpha: 0.1), thickness: 1),
+                          // Icons row
+                          Builder(
+                            builder: (context) {
+                              final room = roomAsync.value;
+                              final userId = ref.read(supabaseClientProvider).auth.currentUser?.id;
+                              final isCreator = room?['creator_id'] == userId;
+                              final currentName = participantAsync.value?['room_name']?.toString() ?? '';
+                              final isFavorite = participantAsync.value?['is_favorite'] == true;
+                              
+                              String remoteName = '';
+                              if (allParticipantsAsync.value != null) {
+                                try {
+                                  final caller = allParticipantsAsync.value!.firstWhere((p) => p['user_id'] != userId);
+                                  remoteName = caller['participant_name']?.toString() ?? '';
+                                } catch (_) {}
+                              }
+                              
+                              if (remoteName.isEmpty && messagesAsync.value != null) {
+                                try {
+                                  final remoteMessage = messagesAsync.value!.firstWhere(
+                                    (m) => m['sender_id'] != userId && m['sender_name'] != null && m['sender_name'].toString().isNotEmpty,
+                                  );
+                                  remoteName = remoteMessage['sender_name'].toString();
+                                } catch (_) {}
+                              }
+
+                              if (remoteName.isEmpty) remoteName = 'Unknown';
+
+                              return Row(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () async {
+                                      try {
+                                        await ref.read(roomRepositoryProvider).toggleFavorite(widget.roomId, !isFavorite);
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+                                        }
+                                      }
+                                    },
+                                    child: Icon(isFavorite ? Icons.star : Icons.star_border, color: Colors.amber, size: 36),
+                                  ),
+                                  const SizedBox(width: 24),
+                                  GestureDetector(
+                                    onTap: () => _handleCallButton(false),
+                                    child: Icon(Icons.phone_outlined, color: moduleConfig.sendButtonColor, size: 36),
+                                  ),
+                                  const SizedBox(width: 24),
+                                  GestureDetector(
+                                    onTap: () => _handleCallButton(true),
+                                    child: Icon(Icons.videocam_outlined, color: const Color(0xFF03DAC6), size: 36),
+                                  ),
+                                  const SizedBox(width: 24),
+                                  GestureDetector(
+                                    onTap: () => _showEditRoomNameDialog(currentName),
+                                    child: const Icon(Icons.edit_outlined, color: Colors.redAccent, size: 36),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    remoteName,
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4.0,
+                        vertical: 4.0,
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.add_box_outlined,
+                              color: Colors.grey,
+                              size: 30,
                             ),
-                            child: TextField(
-                              controller: _messageController,
-                              style: TextStyle(color: moduleConfig.textColor),
-                              maxLines: null,
-                              keyboardType: TextInputType.multiline,
-                              onSubmitted: _isSending
-                                  ? null
-                                  : (_) => _sendMessage(),
-                              decoration: const InputDecoration(
-                                hintText: '메시지를 입력하세요',
-                                hintStyle: TextStyle(color: Colors.grey),
-                                border: InputBorder.none,
-                                isDense: true,
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: 10,
+                            onPressed: _isSending ? null : _pickImage,
+                          ),
+                          Expanded(
+                            child: Container(
+                              constraints: const BoxConstraints(maxHeight: 120),
+                              margin: const EdgeInsets.symmetric(vertical: 6.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                              ),
+                              decoration: BoxDecoration(
+                                color: moduleConfig.inputBackground,
+                                borderRadius: BorderRadius.circular(20),
+                                border: moduleConfig.themeName == 'neon_silence'
+                                    ? Border.all(
+                                        color: moduleConfig.sendButtonColor
+                                            .withValues(alpha: 0.5),
+                                        width: 1,
+                                      )
+                                    : null,
+                              ),
+                              child: TextField(
+                                controller: _messageController,
+                                style: TextStyle(color: moduleConfig.textColor),
+                                maxLines: null,
+                                keyboardType: TextInputType.multiline,
+                                onSubmitted: _isSending
+                                    ? null
+                                    : (_) => _sendMessage(),
+                                decoration: const InputDecoration(
+                                  hintText: '메시지를 입력하세요',
+                                  hintStyle: TextStyle(color: Colors.grey),
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    vertical: 10,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: 6.0,
-                            right: 4.0,
+                          const SizedBox(width: 8),
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: 6.0,
+                              right: 4.0,
+                            ),
+                            child: _isSending
+                                ? const SizedBox(
+                                    width: 48,
+                                    height: 48,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(12),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  )
+                                : ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          moduleConfig.sendButtonColor,
+                                      foregroundColor: moduleConfig.textColor,
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                      minimumSize: const Size(64, 40),
+                                    ),
+                                    onPressed: _sendMessage,
+                                    child: const Text(
+                                      '전송',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
                           ),
-                          child: _isSending
-                              ? const SizedBox(
-                                  width: 48,
-                                  height: 48,
-                                  child: Padding(
-                                    padding: EdgeInsets.all(12),
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  ),
-                                )
-                              : ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        moduleConfig.sendButtonColor,
-                                    foregroundColor: moduleConfig.textColor,
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 12,
-                                    ),
-                                    minimumSize: const Size(64, 40),
-                                  ),
-                                  onPressed: _sendMessage,
-                                  child: const Text(
-                                    '전송',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),

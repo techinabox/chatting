@@ -6,7 +6,14 @@ import 'package:ephemeral_chat/providers/module_providers.dart';
 import 'dart:ui';
 
 class CallScreen extends ConsumerStatefulWidget {
-  const CallScreen({super.key});
+  final String remoteUserName;
+  final String? remoteAvatarUrl;
+
+  const CallScreen({
+    super.key,
+    required this.remoteUserName,
+    this.remoteAvatarUrl,
+  });
 
   @override
   ConsumerState<CallScreen> createState() => _CallScreenState();
@@ -68,17 +75,40 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                   filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                   child: Container(
                     decoration: BoxDecoration(
+                      color: const Color(0xFF131313),
                       gradient: RadialGradient(
                         colors: [
-                          themeConfig.sendButtonColor.withValues(alpha: 0.2),
+                          themeConfig.sendButtonColor.withValues(alpha: 0.1),
                           Colors.transparent,
                         ],
-                        radius: 1.0,
+                        radius: 1.2,
                       ),
                     ),
                   ),
                 ),
               ),
+
+            // Top Left Back Button
+            Positioned(
+              top: 16,
+              left: 16,
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_ios_new,
+                    color: Colors.white54,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
 
             // Remote Video
             if (callState.remoteStream != null && callState.isVideoEnabled)
@@ -103,15 +133,73 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                 ),
               )
             else
-              const Center(
+              Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.person, size: 100, color: Colors.grey),
-                    SizedBox(height: 16),
+                    Container(
+                      width: 160,
+                      height: 160,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFFB388FF).withValues(alpha: 0.3),
+                          width: 4,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFB388FF).withValues(alpha: 0.1),
+                            blurRadius: 30,
+                            spreadRadius: 10,
+                          ),
+                        ],
+                        image: DecorationImage(
+                          image: widget.remoteAvatarUrl != null
+                              ? NetworkImage(widget.remoteAvatarUrl!)
+                              : const NetworkImage('https://i.pravatar.cc/300?img=5') as ImageProvider,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                     Text(
-                      'Voice Call',
-                      style: TextStyle(color: Colors.white, fontSize: 24),
+                    widget.remoteUserName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFB388FF),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'CALLING...',
+                            style: TextStyle(
+                              color: Color(0xFFB388FF),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2.0,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -144,45 +232,69 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
             // Controls
             Positioned(
-              bottom: 32,
+              bottom: 48,
               left: 0,
               right: 0,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildNeonFAB(
-                        heroTag: 'mute',
-                        icon: Icons.mic_off,
-                        color: isNeon
-                            ? themeConfig.sendButtonColor
-                            : Colors.white30,
-                        onPressed: () =>
-                            ref.read(callProvider.notifier).toggleMute(),
-                        isNeon: isNeon,
+                  // Mute
+                  GestureDetector(
+                    onTap: () => ref.read(callProvider.notifier).toggleMute(),
+                    child: Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        shape: BoxShape.circle,
                       ),
-                      _buildNeonFAB(
-                        heroTag: 'video',
-                        icon: Icons.videocam_off,
-                        color: isNeon
-                            ? themeConfig.sendButtonColor
-                            : Colors.white30,
-                        onPressed: () =>
-                            ref.read(callProvider.notifier).toggleVideo(),
-                        isNeon: isNeon,
+                      child: const Icon(
+                        Icons.mic_off_outlined,
+                        color: Colors.white54,
+                        size: 28,
                       ),
-                      _buildNeonFAB(
-                        heroTag: 'end',
-                        icon: Icons.call_end,
-                        color: Colors.redAccent,
-                        onPressed: () =>
-                            ref.read(callProvider.notifier).endCall(),
-                        isNeon: isNeon,
+                    ),
+                  ),
+                  // End Call
+                  GestureDetector(
+                    onTap: () => ref.read(callProvider.notifier).endCall(),
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFB3B3),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFFB3B3).withValues(alpha: 0.15),
+                            blurRadius: 20,
+                            spreadRadius: 4,
+                          ),
+                        ],
                       ),
-                    ],
+                      child: const Icon(
+                        Icons.call_end,
+                        color: Color(0xFF8B0000),
+                        size: 36,
+                      ),
+                    ),
+                  ),
+                  // Video
+                  GestureDetector(
+                    onTap: () => ref.read(callProvider.notifier).toggleVideo(),
+                    child: Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.videocam_outlined,
+                        color: Colors.white54,
+                        size: 28,
+                      ),
+                    ),
                   ),
                 ],
               ),

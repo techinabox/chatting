@@ -244,20 +244,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: AppBar(
         backgroundColor: themeConfig.homeBackgroundColor,
         elevation: 0,
-        title: Text(
-          'FadeChat',
-          style: GoogleFonts.hankenGrotesk(
-            color: isNeon ? Colors.white : themeConfig.homeTextColor,
-            fontWeight: FontWeight.w700,
-            fontSize: 28,
-            letterSpacing: -1,
-          ),
-        ),
+        title: isNeon 
+            ? RichText(
+                text: TextSpan(
+                  style: GoogleFonts.hankenGrotesk(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 26,
+                    letterSpacing: -1,
+                  ),
+                  children: [
+                    const TextSpan(text: 'Fade', style: TextStyle(color: Colors.white)),
+                    TextSpan(text: 'Chat', style: TextStyle(color: themeConfig.sendButtonColor)),
+                  ],
+                ),
+              )
+            : Text(
+                'FadeChat',
+                style: GoogleFonts.hankenGrotesk(
+                  color: themeConfig.homeTextColor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 26,
+                  letterSpacing: -1,
+                ),
+              ),
         actions: [
           IconButton(
             icon: Icon(
-              Icons.chat_outlined,
-              color: isNeon ? themeConfig.homeSubtextColor : themeConfig.homeTextColor,
+              Icons.add_comment_outlined,
+              color: isNeon ? Colors.white54 : themeConfig.homeTextColor,
             ),
             tooltip: 'Create Room',
             onPressed: () => _createRoom(context, ref),
@@ -265,7 +279,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           IconButton(
             icon: Icon(
               Icons.person_add_outlined,
-              color: isNeon ? themeConfig.homeSubtextColor : themeConfig.homeTextColor,
+              color: isNeon ? Colors.white54 : themeConfig.homeTextColor,
             ),
             tooltip: 'Join Room',
             onPressed: () => _showJoinRoomDialog(context),
@@ -512,26 +526,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             style: TextStyle(
                               color: isNeon ? Colors.grey.shade500 : themeConfig.homeSubtextColor,
-                              fontSize: 12,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                           const SizedBox(height: 6),
                           if (hasUnread)
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
+                              width: 18,
+                              height: 18,
                               decoration: BoxDecoration(
                                 color: isNeon ? const Color(0xFF03DAC6) : AppColors.kakaoHomeBadge,
-                                borderRadius: BorderRadius.circular(10),
+                                shape: BoxShape.circle,
                               ),
+                              alignment: Alignment.center,
                               child: Text(
                                 unreadCount > 99 ? '99+' : '$unreadCount',
                                 style: TextStyle(
                                   color: isNeon ? Colors.black : Colors.white,
-                                  fontSize: 11,
+                                  fontSize: 10,
                                   fontWeight: FontWeight.bold,
+                                  height: 1.0,
                                 ),
                               ),
                             ),
@@ -547,37 +562,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Error: $err')),
       ),
-      bottomNavigationBar: isNeon ? BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: themeConfig.homeBackgroundColor,
-        selectedItemColor: themeConfig.sendButtonColor,
-        unselectedItemColor: themeConfig.homeSubtextColor,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        currentIndex: tabIndex,
-        onTap: (index) {
-          if (index == 0 || index == 1) {
-            ref.read(homeTabIndexProvider.notifier).state = index;
-          } else if (index == 2) {
-            Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.star_border),
-            label: 'Favorites',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble),
-            label: 'Chats',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.more_horiz),
-            label: 'Settings',
-          ),
-        ],
+      bottomNavigationBar: isNeon ? Theme(
+        data: Theme.of(context).copyWith(
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: const Color(0xFF131313),
+          selectedItemColor: themeConfig.sendButtonColor,
+          unselectedItemColor: Colors.grey.shade600,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          currentIndex: tabIndex,
+          onTap: (index) {
+            if (index == 0 || index == 1) {
+              ref.read(homeTabIndexProvider.notifier).state = index;
+            } else if (index == 2) {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
+            }
+          },
+          items: [
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.star_border),
+              activeIcon: _buildGlowingIcon(Icons.star, themeConfig.sendButtonColor),
+              label: 'Favorites',
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.chat_bubble_outline),
+              activeIcon: _buildGlowingIcon(Icons.chat_bubble, themeConfig.sendButtonColor),
+              label: 'Chats',
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.more_horiz),
+              activeIcon: _buildGlowingIcon(Icons.more_horiz, themeConfig.sendButtonColor),
+              label: 'Settings',
+            ),
+          ],
+        ),
       ) : BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
@@ -610,15 +634,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _buildGlowingIcon(IconData iconData, Color color) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 16,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Icon(iconData, color: color, size: 24),
+    );
+  }
+
   Widget _buildChip(String label, {bool isSelected = false, int? badgeCount, bool isNeon = false, dynamic themeConfig}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: isNeon 
-            ? (isSelected ? themeConfig.homeTextColor : const Color(0xFF1E1E1E))
+            ? (isSelected ? Colors.white : const Color(0xFF131313))
             : (isSelected ? Colors.black87 : AppColors.kakaoHomeChipBackground),
         border: (isSelected || isNeon)
-            ? null
+            ? Border.all(color: isNeon && !isSelected ? Colors.white12 : Colors.transparent)
             : Border.all(color: AppColors.kakaoHomeChipBorder),
         borderRadius: BorderRadius.circular(20),
       ),
@@ -629,27 +669,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             label,
             style: TextStyle(
               color: isNeon 
-                  ? (isSelected ? Colors.black : Colors.white)
+                  ? (isSelected ? Colors.black : Colors.white70)
                   : (isSelected ? Colors.white : AppColors.kakaoHomeText),
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               fontSize: 14,
             ),
           ),
           if (badgeCount != null) ...[
-            const SizedBox(width: 4),
+            const SizedBox(width: 6),
             Container(
-              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              width: 18,
+              height: 18,
               decoration: BoxDecoration(
-                color: isNeon ? themeConfig.sendButtonColor : AppColors.kakaoHomeBadge,
-                borderRadius: BorderRadius.circular(9),
+                color: isNeon ? const Color(0xFF03DAC6) : AppColors.kakaoHomeBadge,
+                shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
               child: Text(
-                '$badgeCount',
+                badgeCount > 99 ? '99+' : '$badgeCount',
                 style: TextStyle(
                   color: isNeon ? Colors.black : Colors.white,
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: FontWeight.bold,
                   height: 1.0,
                 ),
