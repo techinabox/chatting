@@ -287,23 +287,98 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _confirmLeaveRoom() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Leave Room'),
-        content: const Text(
-          'Are you sure you want to leave this room? All your messages and media will be permanently deleted.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+      builder: (context) {
+        final themeConfig = ref.read(chatModuleConfigProvider);
+        final isNeon = themeConfig.themeName == 'neon_silence';
+
+        if (isNeon) {
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.redAccent.withValues(alpha: 0.5),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.redAccent.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.redAccent,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Destroy Room',
+                    style: TextStyle(
+                      color: themeConfig.homeTextColor,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Are you sure you want to leave this room? All your messages and media will be permanently deleted. This action cannot be undone.',
+                    style: TextStyle(color: themeConfig.homeSubtextColor),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        style: TextButton.styleFrom(
+                          foregroundColor: themeConfig.homeSubtextColor,
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 8),
+                      FilledButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Destroy'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return AlertDialog(
+          title: const Text('Leave Room'),
+          content: const Text(
+            'Are you sure you want to leave this room? All your messages and media will be permanently deleted.',
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.orange),
-            child: const Text('Leave Room'),
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.orange),
+              child: const Text('Leave Room'),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirm == true) {
@@ -542,45 +617,139 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final moduleConfig = ref.watch(chatModuleConfigProvider);
+
     // Listen for incoming calls
     ref.listen<CallStateData>(callProvider, (previous, next) {
       if (previous?.state != CallState.ringing &&
           next.state == CallState.ringing) {
         // Show incoming call dialog
+        final isNeon = moduleConfig.themeName == 'neon_silence';
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            title: const Text('Incoming Call'),
-            content: Text(
-              next.isVideoEnabled
-                  ? 'Incoming Video Call...'
-                  : 'Incoming Voice Call...',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  ref.read(callProvider.notifier).endCall(reason: 'declined');
-                  Navigator.of(context).pop();
-                },
-                child: const Text(
-                  'Decline',
-                  style: TextStyle(color: Colors.red),
+          barrierColor: isNeon ? Colors.black87 : Colors.black54,
+          builder: (context) {
+            final content = next.isVideoEnabled
+                ? 'Incoming Video Call...'
+                : 'Incoming Voice Call...';
+
+            if (isNeon) {
+              return Dialog(
+                backgroundColor: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: moduleConfig.sendButtonColor.withValues(
+                        alpha: 0.5,
+                      ),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: moduleConfig.sendButtonColor.withValues(
+                          alpha: 0.3,
+                        ),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.call,
+                        color: moduleConfig.sendButtonColor,
+                        size: 48,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Incoming Call',
+                        style: TextStyle(
+                          color: moduleConfig.homeTextColor,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        content,
+                        style: TextStyle(color: moduleConfig.homeSubtextColor),
+                      ),
+                      const SizedBox(height: 32),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.call_end,
+                              color: Colors.redAccent,
+                              size: 32,
+                            ),
+                            onPressed: () {
+                              ref
+                                  .read(callProvider.notifier)
+                                  .endCall(reason: 'declined');
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.call,
+                              color: Colors.greenAccent,
+                              size: 32,
+                            ),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              ref.read(callProvider.notifier).answerCall();
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const CallScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  ref.read(callProvider.notifier).answerCall();
-                  Navigator.of(
-                    context,
-                  ).push(MaterialPageRoute(builder: (_) => const CallScreen()));
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                child: const Text('Accept'),
-              ),
-            ],
-          ),
+              );
+            }
+
+            return AlertDialog(
+              title: const Text('Incoming Call'),
+              content: Text(content),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    ref.read(callProvider.notifier).endCall(reason: 'declined');
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text(
+                    'Decline',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    ref.read(callProvider.notifier).answerCall();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const CallScreen()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                  ),
+                  child: const Text('Accept'),
+                ),
+              ],
+            );
+          },
         );
       }
     });
@@ -634,7 +803,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final fallbackName = ref.watch(defaultParticipantNameProvider);
     final fallbackEmoji = ref.watch(defaultParticipantEmojiProvider);
     final fallbackAvatarUrl = ref.watch(defaultParticipantAvatarProvider);
-    final moduleConfig = ref.watch(chatModuleConfigProvider);
 
     return Scaffold(
       backgroundColor: moduleConfig.backgroundColor,
@@ -803,16 +971,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         color: isMe
                             ? moduleConfig.myBubbleColor
                             : moduleConfig.otherBubbleColor,
-                        borderRadius: BorderRadius.only(
-                          topLeft: const Radius.circular(16),
-                          topRight: const Radius.circular(16),
-                          bottomLeft: isMe
-                              ? const Radius.circular(16)
-                              : const Radius.circular(4),
-                          bottomRight: isMe
-                              ? const Radius.circular(4)
-                              : const Radius.circular(16),
-                        ),
+                        borderRadius: moduleConfig.themeName == 'neon_silence'
+                            ? BorderRadius.only(
+                                topLeft: const Radius.circular(24),
+                                topRight: const Radius.circular(24),
+                                bottomLeft: isMe
+                                    ? const Radius.circular(24)
+                                    : const Radius.circular(0),
+                                bottomRight: isMe
+                                    ? const Radius.circular(0)
+                                    : const Radius.circular(24),
+                              )
+                            : BorderRadius.only(
+                                topLeft: const Radius.circular(16),
+                                topRight: const Radius.circular(16),
+                                bottomLeft: isMe
+                                    ? const Radius.circular(16)
+                                    : const Radius.circular(4),
+                                bottomRight: isMe
+                                    ? const Radius.circular(4)
+                                    : const Radius.circular(16),
+                              ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.05),
@@ -962,7 +1141,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       children: [
                         if (!isMe) ...[
                           CircleAvatar(
-                            backgroundColor: Colors.white.withValues(alpha: 0.8),
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.8,
+                            ),
                             backgroundImage: displayAvatarUrl != null
                                 ? NetworkImage(displayAvatarUrl)
                                 : null,
@@ -1012,9 +1193,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                         _formatTimestamp(
                                           message['created_at']?.toString(),
                                         ),
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 10,
-                                          color: Colors.grey,
+                                          color: moduleConfig.dateTextColor,
                                         ),
                                       ),
                                     ),
@@ -1029,9 +1210,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                         _formatTimestamp(
                                           message['created_at']?.toString(),
                                         ),
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 10,
-                                          color: Colors.grey,
+                                          color: moduleConfig.dateTextColor,
                                         ),
                                       ),
                                     ),
@@ -1043,7 +1224,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         if (isMe) ...[
                           const SizedBox(width: 8),
                           CircleAvatar(
-                            backgroundColor: Colors.white.withValues(alpha: 0.8),
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.8,
+                            ),
                             backgroundImage: displayAvatarUrl != null
                                 ? NetworkImage(displayAvatarUrl)
                                 : null,
@@ -1213,8 +1396,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               horizontal: 16.0,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
+                              color: moduleConfig.inputBackground,
                               borderRadius: BorderRadius.circular(20),
+                              border: moduleConfig.themeName == 'neon_silence'
+                                  ? Border.all(
+                                      color: moduleConfig.sendButtonColor
+                                          .withValues(alpha: 0.5),
+                                      width: 1,
+                                    )
+                                  : null,
                             ),
                             child: TextField(
                               controller: _messageController,

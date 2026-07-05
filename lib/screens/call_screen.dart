@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:ephemeral_chat/providers/call_provider.dart';
+import 'package:ephemeral_chat/providers/module_providers.dart';
+import 'dart:ui';
 
 class CallScreen extends ConsumerStatefulWidget {
   const CallScreen({super.key});
@@ -51,16 +53,40 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       });
     }
 
+    final themeConfig = ref.watch(chatModuleConfigProvider);
+    final isNeon = themeConfig.themeName == 'neon_silence';
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: isNeon ? Colors.black : Colors.black,
       body: SafeArea(
         child: Stack(
           children: [
+            // Background Blur for Neon Silence
+            if (isNeon)
+              Positioned.fill(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        colors: [
+                          themeConfig.sendButtonColor.withValues(alpha: 0.2),
+                          Colors.transparent,
+                        ],
+                        radius: 1.0,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
             // Remote Video
             if (callState.remoteStream != null && callState.isVideoEnabled)
-              RTCVideoView(
-                _remoteRenderer,
-                objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+              Positioned.fill(
+                child: RTCVideoView(
+                  _remoteRenderer,
+                  objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                ),
               )
             else if (callState.isVideoEnabled)
               const Center(
@@ -124,48 +150,37 @@ class _CallScreenState extends ConsumerState<CallScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // DEBUG INFO
-                  Text(
-                    'ICE: ${callState.iceState} | Conn: ${callState.connState}',
-                    style: const TextStyle(color: Colors.yellow, fontSize: 12),
-                  ),
-                  Text(
-                    'Sent ICE: ${callState.localIceCount} | Rcvd ICE: ${callState.remoteIceCount}',
-                    style: const TextStyle(
-                      color: Colors.cyanAccent,
-                      fontSize: 12,
-                    ),
-                  ),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      FloatingActionButton(
+                      _buildNeonFAB(
                         heroTag: 'mute',
-                        backgroundColor: Colors.white30,
-                        onPressed: () {
-                          ref.read(callProvider.notifier).toggleMute();
-                        },
-                        child: const Icon(Icons.mic_off, color: Colors.white),
+                        icon: Icons.mic_off,
+                        color: isNeon
+                            ? themeConfig.sendButtonColor
+                            : Colors.white30,
+                        onPressed: () =>
+                            ref.read(callProvider.notifier).toggleMute(),
+                        isNeon: isNeon,
                       ),
-                      FloatingActionButton(
+                      _buildNeonFAB(
                         heroTag: 'video',
-                        backgroundColor: Colors.white30,
-                        onPressed: () {
-                          ref.read(callProvider.notifier).toggleVideo();
-                        },
-                        child: const Icon(
-                          Icons.videocam_off,
-                          color: Colors.white,
-                        ),
+                        icon: Icons.videocam_off,
+                        color: isNeon
+                            ? themeConfig.sendButtonColor
+                            : Colors.white30,
+                        onPressed: () =>
+                            ref.read(callProvider.notifier).toggleVideo(),
+                        isNeon: isNeon,
                       ),
-                      FloatingActionButton(
+                      _buildNeonFAB(
                         heroTag: 'end',
-                        backgroundColor: Colors.red,
-                        onPressed: () {
-                          ref.read(callProvider.notifier).endCall();
-                        },
-                        child: const Icon(Icons.call_end, color: Colors.white),
+                        icon: Icons.call_end,
+                        color: Colors.redAccent,
+                        onPressed: () =>
+                            ref.read(callProvider.notifier).endCall(),
+                        isNeon: isNeon,
                       ),
                     ],
                   ),
@@ -174,6 +189,35 @@ class _CallScreenState extends ConsumerState<CallScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildNeonFAB({
+    required String heroTag,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+    required bool isNeon,
+  }) {
+    return Container(
+      decoration: isNeon
+          ? BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.5),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                ),
+              ],
+            )
+          : null,
+      child: FloatingActionButton(
+        heroTag: heroTag,
+        backgroundColor: color.withValues(alpha: isNeon ? 0.8 : 1.0),
+        onPressed: onPressed,
+        child: Icon(icon, color: Colors.white),
       ),
     );
   }

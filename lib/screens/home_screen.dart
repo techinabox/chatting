@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ephemeral_chat/config/ad_config.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -9,6 +10,7 @@ import 'package:ephemeral_chat/providers/settings_provider.dart';
 import 'package:ephemeral_chat/screens/chat_screen.dart';
 import 'package:ephemeral_chat/screens/settings_screen.dart';
 import '../theme/app_colors.dart';
+import 'package:ephemeral_chat/providers/module_providers.dart';
 
 String _formatTimestamp(String? isoString) {
   if (isoString == null || isoString.isEmpty) return '';
@@ -45,11 +47,7 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
   BannerAd? _bannerAd;
   bool _isLoaded = false;
 
-  final String _adUnitId = kIsWeb
-      ? '' // AdMob doesn't support web natively via this package
-      : defaultTargetPlatform == TargetPlatform.android
-      ? 'ca-app-pub-3940256099942544/6300978111'
-      : 'ca-app-pub-3940256099942544/2934735716';
+  final String _adUnitId = AdConfig.bannerAdUnitId;
 
   @override
   void initState() {
@@ -158,18 +156,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
+        final themeConfig = ref.read(chatModuleConfigProvider);
+        final isNeon = themeConfig.themeName == 'neon_silence';
+
         return AlertDialog(
-          title: const Text('Room Created'),
+          backgroundColor: isNeon ? Colors.black87 : null,
+          shape: isNeon
+              ? RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(
+                    color: themeConfig.sendButtonColor.withValues(alpha: 0.5),
+                  ),
+                )
+              : null,
+          title: Text(
+            'Room Created',
+            style: TextStyle(color: isNeon ? themeConfig.homeTextColor : null),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Share this invite code with others:'),
+              Text(
+                'Share this invite code with others:',
+                style: TextStyle(
+                  color: isNeon ? themeConfig.homeSubtextColor : null,
+                ),
+              ),
               const SizedBox(height: 16),
               SelectableText(
                 code,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
+                  color: isNeon ? themeConfig.sendButtonColor : null,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -183,6 +202,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SnackBar(content: Text('Code copied to clipboard')),
                 );
               },
+              style: isNeon
+                  ? TextButton.styleFrom(
+                      foregroundColor: themeConfig.homeSubtextColor,
+                    )
+                  : null,
               child: const Text('Copy'),
             ),
             FilledButton(
@@ -192,6 +216,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   MaterialPageRoute(builder: (_) => ChatScreen(roomId: roomId)),
                 );
               },
+              style: isNeon
+                  ? FilledButton.styleFrom(
+                      backgroundColor: themeConfig.sendButtonColor,
+                      foregroundColor: themeConfig.backgroundColor,
+                    )
+                  : null,
               child: const Text('Enter Chat'),
             ),
           ],
@@ -205,33 +235,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final roomsAsync = ref.watch(myRoomsProvider);
     final currentFilter = ref.watch(homeFilterProvider);
     final tabIndex = ref.watch(homeTabIndexProvider);
+    final themeConfig = ref.watch(chatModuleConfigProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.kakaoHomeBackground,
+      backgroundColor: themeConfig.homeBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.kakaoHomeAppBar,
+        backgroundColor: themeConfig.homeBackgroundColor,
         elevation: 0,
         title: Text(
           tabIndex == 0 ? '즐겨찾기' : '채팅',
-          style: const TextStyle(
-            color: AppColors.kakaoHomeText,
+          style: TextStyle(
+            color: themeConfig.homeTextColor,
             fontWeight: FontWeight.bold,
             fontSize: 24,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.add_comment_outlined,
-              color: AppColors.kakaoHomeText,
+              color: themeConfig.homeTextColor,
             ),
             tooltip: 'Create Room',
             onPressed: () => _createRoom(context, ref),
           ),
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.group_add_outlined,
-              color: AppColors.kakaoHomeText,
+              color: themeConfig.homeTextColor,
             ),
             tooltip: 'Join Room',
             onPressed: () => _showJoinRoomDialog(context),
@@ -386,10 +417,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 Flexible(
                                   child: Text(
                                     roomName,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
-                                      color: AppColors.kakaoHomeText,
+                                      color: themeConfig.homeTextColor,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -418,8 +449,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 }
                                 return Text(
                                   subtitleText,
-                                  style: const TextStyle(
-                                    color: AppColors.kakaoHomeSubText,
+                                  style: TextStyle(
+                                    color: themeConfig.homeSubtextColor,
                                     fontSize: 14,
                                   ),
                                   maxLines: 1,
@@ -440,8 +471,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               latestMsg?['created_at']?.toString() ??
                                   room['created_at']?.toString(),
                             ),
-                            style: const TextStyle(
-                              color: AppColors.kakaoHomeSubText,
+                            style: TextStyle(
+                              color: themeConfig.homeSubtextColor,
                               fontSize: 12,
                             ),
                           ),
@@ -453,13 +484,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.kakaoHomeBadge,
+                                color: themeConfig.themeName == 'neon_silence'
+                                    ? themeConfig.sendButtonColor
+                                    : AppColors.kakaoHomeBadge,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
                                 unreadCount > 99 ? '99+' : '$unreadCount',
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: TextStyle(
+                                  color: themeConfig.themeName == 'neon_silence'
+                                      ? themeConfig.backgroundColor
+                                      : Colors.white,
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -627,8 +662,23 @@ class _JoinRoomDialogState extends ConsumerState<_JoinRoomDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final themeConfig = ref.watch(chatModuleConfigProvider);
+    final isNeon = themeConfig.themeName == 'neon_silence';
+
     return AlertDialog(
-      title: const Text('Join Room'),
+      backgroundColor: isNeon ? Colors.black87 : null,
+      shape: isNeon
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: themeConfig.sendButtonColor.withValues(alpha: 0.5),
+              ),
+            )
+          : null,
+      title: Text(
+        'Join Room',
+        style: TextStyle(color: isNeon ? themeConfig.homeTextColor : null),
+      ),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -638,10 +688,34 @@ class _JoinRoomDialogState extends ConsumerState<_JoinRoomDialog> {
             children: [
               TextFormField(
                 controller: _codeController,
-                decoration: const InputDecoration(
+                style: TextStyle(
+                  color: isNeon ? themeConfig.homeTextColor : null,
+                ),
+                decoration: InputDecoration(
                   labelText: 'Invite Code',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.key),
+                  labelStyle: TextStyle(
+                    color: isNeon ? themeConfig.homeSubtextColor : null,
+                  ),
+                  border: isNeon
+                      ? OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: themeConfig.sendButtonColor,
+                          ),
+                        )
+                      : const OutlineInputBorder(),
+                  enabledBorder: isNeon
+                      ? OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: themeConfig.sendButtonColor.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                        )
+                      : null,
+                  prefixIcon: Icon(
+                    Icons.key,
+                    color: isNeon ? themeConfig.homeSubtextColor : null,
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -659,10 +733,34 @@ class _JoinRoomDialogState extends ConsumerState<_JoinRoomDialog> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(
+                style: TextStyle(
+                  color: isNeon ? themeConfig.homeTextColor : null,
+                ),
+                decoration: InputDecoration(
                   labelText: 'My Room Name',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.title),
+                  labelStyle: TextStyle(
+                    color: isNeon ? themeConfig.homeSubtextColor : null,
+                  ),
+                  border: isNeon
+                      ? OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: themeConfig.sendButtonColor,
+                          ),
+                        )
+                      : const OutlineInputBorder(),
+                  enabledBorder: isNeon
+                      ? OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: themeConfig.sendButtonColor.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                        )
+                      : null,
+                  prefixIcon: Icon(
+                    Icons.title,
+                    color: isNeon ? themeConfig.homeSubtextColor : null,
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -671,25 +769,63 @@ class _JoinRoomDialogState extends ConsumerState<_JoinRoomDialog> {
                   return null;
                 },
               ),
-              const Divider(height: 32),
-              const Text(
+              Divider(
+                height: 32,
+                color: isNeon
+                    ? themeConfig.sendButtonColor.withValues(alpha: 0.3)
+                    : null,
+              ),
+              Text(
                 'My Profile',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isNeon ? themeConfig.homeTextColor : null,
+                ),
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _participantNameController,
-                decoration: const InputDecoration(
+                style: TextStyle(
+                  color: isNeon ? themeConfig.homeTextColor : null,
+                ),
+                decoration: InputDecoration(
                   labelText: 'Chatter ID',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+                  labelStyle: TextStyle(
+                    color: isNeon ? themeConfig.homeSubtextColor : null,
+                  ),
+                  border: isNeon
+                      ? OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: themeConfig.sendButtonColor,
+                          ),
+                        )
+                      : const OutlineInputBorder(),
+                  enabledBorder: isNeon
+                      ? OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: themeConfig.sendButtonColor.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                        )
+                      : null,
+                  prefixIcon: Icon(
+                    Icons.person,
+                    color: isNeon ? themeConfig.homeSubtextColor : null,
+                  ),
                 ),
                 validator: (value) => (value == null || value.trim().isEmpty)
                     ? 'Enter your name'
                     : null,
               ),
               const SizedBox(height: 16),
-              const Text('Animal Emoji', style: TextStyle(fontSize: 12)),
+              Text(
+                'Animal Emoji',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isNeon ? themeConfig.homeSubtextColor : null,
+                ),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8.0,
@@ -702,12 +838,20 @@ class _JoinRoomDialogState extends ConsumerState<_JoinRoomDialog> {
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? Theme.of(context).colorScheme.primaryContainer
+                            ? (isNeon
+                                  ? themeConfig.sendButtonColor.withValues(
+                                      alpha: 0.2,
+                                    )
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer)
                             : Colors.transparent,
                         border: Border.all(
                           color: isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.grey,
+                              ? (isNeon
+                                    ? themeConfig.sendButtonColor
+                                    : Theme.of(context).colorScheme.primary)
+                              : (isNeon ? Colors.grey.shade800 : Colors.grey),
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -723,10 +867,21 @@ class _JoinRoomDialogState extends ConsumerState<_JoinRoomDialog> {
       actions: [
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+          style: isNeon
+              ? TextButton.styleFrom(
+                  foregroundColor: themeConfig.homeSubtextColor,
+                )
+              : null,
           child: const Text('Cancel'),
         ),
         FilledButton(
           onPressed: _isLoading ? null : _submit,
+          style: isNeon
+              ? FilledButton.styleFrom(
+                  backgroundColor: themeConfig.sendButtonColor,
+                  foregroundColor: themeConfig.backgroundColor,
+                )
+              : null,
           child: _isLoading
               ? const SizedBox(
                   width: 16,
@@ -811,8 +966,23 @@ class _CreateRoomDialogState extends ConsumerState<_CreateRoomDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final themeConfig = ref.watch(chatModuleConfigProvider);
+    final isNeon = themeConfig.themeName == 'neon_silence';
+
     return AlertDialog(
-      title: const Text('Create Room'),
+      backgroundColor: isNeon ? Colors.black87 : null,
+      shape: isNeon
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: themeConfig.sendButtonColor.withValues(alpha: 0.5),
+              ),
+            )
+          : null,
+      title: Text(
+        'Create Room',
+        style: TextStyle(color: isNeon ? themeConfig.homeTextColor : null),
+      ),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -822,10 +992,34 @@ class _CreateRoomDialogState extends ConsumerState<_CreateRoomDialog> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(
+                style: TextStyle(
+                  color: isNeon ? themeConfig.homeTextColor : null,
+                ),
+                decoration: InputDecoration(
                   labelText: 'Room Name',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.title),
+                  labelStyle: TextStyle(
+                    color: isNeon ? themeConfig.homeSubtextColor : null,
+                  ),
+                  border: isNeon
+                      ? OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: themeConfig.sendButtonColor,
+                          ),
+                        )
+                      : const OutlineInputBorder(),
+                  enabledBorder: isNeon
+                      ? OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: themeConfig.sendButtonColor.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                        )
+                      : null,
+                  prefixIcon: Icon(
+                    Icons.title,
+                    color: isNeon ? themeConfig.homeSubtextColor : null,
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -837,10 +1031,35 @@ class _CreateRoomDialogState extends ConsumerState<_CreateRoomDialog> {
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: _deletePermission,
-                decoration: const InputDecoration(
+                dropdownColor: isNeon ? themeConfig.homeBackgroundColor : null,
+                style: TextStyle(
+                  color: isNeon ? themeConfig.homeTextColor : Colors.black,
+                ),
+                decoration: InputDecoration(
                   labelText: 'Delete Permission',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.delete_sweep),
+                  labelStyle: TextStyle(
+                    color: isNeon ? themeConfig.homeSubtextColor : null,
+                  ),
+                  border: isNeon
+                      ? OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: themeConfig.sendButtonColor,
+                          ),
+                        )
+                      : const OutlineInputBorder(),
+                  enabledBorder: isNeon
+                      ? OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: themeConfig.sendButtonColor.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                        )
+                      : null,
+                  prefixIcon: Icon(
+                    Icons.delete_sweep,
+                    color: isNeon ? themeConfig.homeSubtextColor : null,
+                  ),
                 ),
                 items: const [
                   DropdownMenuItem(
@@ -860,25 +1079,63 @@ class _CreateRoomDialogState extends ConsumerState<_CreateRoomDialog> {
                   if (value != null) setState(() => _deletePermission = value);
                 },
               ),
-              const Divider(height: 32),
-              const Text(
+              Divider(
+                height: 32,
+                color: isNeon
+                    ? themeConfig.sendButtonColor.withValues(alpha: 0.3)
+                    : null,
+              ),
+              Text(
                 'My Profile',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isNeon ? themeConfig.homeTextColor : null,
+                ),
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _participantNameController,
-                decoration: const InputDecoration(
+                style: TextStyle(
+                  color: isNeon ? themeConfig.homeTextColor : null,
+                ),
+                decoration: InputDecoration(
                   labelText: 'Chatter ID',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+                  labelStyle: TextStyle(
+                    color: isNeon ? themeConfig.homeSubtextColor : null,
+                  ),
+                  border: isNeon
+                      ? OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: themeConfig.sendButtonColor,
+                          ),
+                        )
+                      : const OutlineInputBorder(),
+                  enabledBorder: isNeon
+                      ? OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: themeConfig.sendButtonColor.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                        )
+                      : null,
+                  prefixIcon: Icon(
+                    Icons.person,
+                    color: isNeon ? themeConfig.homeSubtextColor : null,
+                  ),
                 ),
                 validator: (value) => (value == null || value.trim().isEmpty)
                     ? 'Enter your name'
                     : null,
               ),
               const SizedBox(height: 16),
-              const Text('Animal Emoji', style: TextStyle(fontSize: 12)),
+              Text(
+                'Animal Emoji',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isNeon ? themeConfig.homeSubtextColor : null,
+                ),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8.0,
@@ -891,12 +1148,20 @@ class _CreateRoomDialogState extends ConsumerState<_CreateRoomDialog> {
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? Theme.of(context).colorScheme.primaryContainer
+                            ? (isNeon
+                                  ? themeConfig.sendButtonColor.withValues(
+                                      alpha: 0.2,
+                                    )
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer)
                             : Colors.transparent,
                         border: Border.all(
                           color: isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.grey,
+                              ? (isNeon
+                                    ? themeConfig.sendButtonColor
+                                    : Theme.of(context).colorScheme.primary)
+                              : (isNeon ? Colors.grey.shade800 : Colors.grey),
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -912,10 +1177,21 @@ class _CreateRoomDialogState extends ConsumerState<_CreateRoomDialog> {
       actions: [
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+          style: isNeon
+              ? TextButton.styleFrom(
+                  foregroundColor: themeConfig.homeSubtextColor,
+                )
+              : null,
           child: const Text('Cancel'),
         ),
         FilledButton(
           onPressed: _isLoading ? null : _submit,
+          style: isNeon
+              ? FilledButton.styleFrom(
+                  backgroundColor: themeConfig.sendButtonColor,
+                  foregroundColor: themeConfig.backgroundColor,
+                )
+              : null,
           child: _isLoading
               ? const SizedBox(
                   width: 16,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ephemeral_chat/providers/settings_provider.dart';
 import 'package:ephemeral_chat/providers/chat_providers.dart';
+import 'package:ephemeral_chat/providers/module_providers.dart';
 import 'package:ephemeral_chat/screens/module_settings_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:crop_your_image/crop_your_image.dart';
@@ -192,8 +193,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeConfig = ref.watch(chatModuleConfigProvider);
+    final isNeon = themeConfig.themeName == 'neon_silence';
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Global Settings')),
+      backgroundColor: themeConfig.homeBackgroundColor,
+      appBar: AppBar(
+        title: Text(
+          'Global Settings',
+          style: TextStyle(color: themeConfig.homeTextColor),
+        ),
+        backgroundColor: themeConfig.homeBackgroundColor,
+        iconTheme: IconThemeData(color: themeConfig.homeTextColor),
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -241,26 +253,54 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               const SizedBox(height: 24),
               Align(
                 alignment: Alignment.centerLeft,
-                child: const Text(
+                child: Text(
                   'Default Chatter ID',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: themeConfig.homeTextColor,
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
+                style: TextStyle(color: themeConfig.homeTextColor),
+                decoration: InputDecoration(
                   hintText: 'Enter your default name',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+                  hintStyle: TextStyle(color: themeConfig.homeSubtextColor),
+                  border: isNeon
+                      ? OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: themeConfig.sendButtonColor,
+                          ),
+                        )
+                      : const OutlineInputBorder(),
+                  enabledBorder: isNeon
+                      ? OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: themeConfig.sendButtonColor.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                        )
+                      : null,
+                  prefixIcon: Icon(
+                    Icons.person,
+                    color: themeConfig.homeSubtextColor,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
               Align(
                 alignment: Alignment.centerLeft,
-                child: const Text(
+                child: Text(
                   'Default Animal Emoji (Fallback)',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: themeConfig.homeTextColor,
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -279,11 +319,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? Theme.of(context).colorScheme.primaryContainer
+                            ? (isNeon
+                                  ? themeConfig.sendButtonColor.withValues(
+                                      alpha: 0.2,
+                                    )
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer)
                             : Colors.transparent,
                         border: Border.all(
                           color: isSelected
-                              ? Theme.of(context).colorScheme.primary
+                              ? (isNeon
+                                    ? themeConfig.sendButtonColor
+                                    : Theme.of(context).colorScheme.primary)
                               : Colors.grey,
                           width: 2,
                         ),
@@ -298,6 +346,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
+                  style: isNeon
+                      ? FilledButton.styleFrom(
+                          backgroundColor: themeConfig.sendButtonColor,
+                          foregroundColor: themeConfig.backgroundColor,
+                        )
+                      : null,
                   onPressed: _saveSettings,
                   child: const Padding(
                     padding: EdgeInsets.all(12.0),
@@ -311,10 +365,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               const SizedBox(height: 32),
               const Divider(),
               ListTile(
-                leading: const Icon(Icons.color_lens),
-                title: const Text('모듈 디자인 설정 (미리보기)'),
-                subtitle: const Text('채팅앱 테마 커스터마이징'),
-                trailing: const Icon(Icons.chevron_right),
+                leading: Icon(
+                  Icons.color_lens,
+                  color: themeConfig.homeTextColor,
+                ),
+                title: Text(
+                  '모듈 디자인 설정 (미리보기)',
+                  style: TextStyle(color: themeConfig.homeTextColor),
+                ),
+                subtitle: Text(
+                  '채팅앱 테마 커스터마이징',
+                  style: TextStyle(color: themeConfig.homeSubtextColor),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: themeConfig.homeTextColor,
+                ),
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(

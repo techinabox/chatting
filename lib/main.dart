@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Ephemeral Chat',
-      debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: true,
       theme: ThemeData.dark().copyWith(
         textTheme: GoogleFonts.notoSansKrTextTheme(ThemeData.dark().textTheme),
         colorScheme: ColorScheme.fromSeed(

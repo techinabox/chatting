@@ -59,6 +59,19 @@ class ModuleSettingsScreen extends ConsumerWidget {
             trailing: _buildCheck(config, ChatModuleConfig.dark()),
           ),
           const Divider(),
+          ListTile(
+            title: const Text('Neon Silence Theme'),
+            subtitle: const Text('네온 퍼플 말풍선, 퓨어 블랙 배경 (사이버펑크)'),
+            leading: _buildColorPreview(
+              ChatModuleConfig.neonSilence().sendButtonColor,
+            ),
+            onTap: () {
+              ref.read(chatModuleConfigProvider.notifier).state =
+                  ChatModuleConfig.neonSilence();
+            },
+            trailing: _buildCheck(config, ChatModuleConfig.neonSilence()),
+          ),
+          const Divider(),
         ],
       ),
     );
@@ -77,8 +90,7 @@ class ModuleSettingsScreen extends ConsumerWidget {
   }
 
   Widget? _buildCheck(ChatModuleConfig current, ChatModuleConfig target) {
-    if (current.backgroundColor == target.backgroundColor &&
-        current.myBubbleColor == target.myBubbleColor) {
+    if (current.themeName == target.themeName) {
       return const Icon(Icons.check, color: Colors.blue);
     }
     return null;
