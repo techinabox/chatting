@@ -31,12 +31,26 @@ class RoomRepository {
 
     final roomId = room['id'] as String;
 
-    // Generate invite code
-    final code = InviteCodeGenerator.generateSecureCode(24);
-    await _client.from('invite_codes').insert({
-      'code': code,
-      'room_id': roomId,
-    });
+    // Generate invite code with retry logic in case of collision
+    String code = '';
+    for (int i = 0; i < 3; i++) {
+      code = InviteCodeGenerator.generatePassphrase();
+      try {
+        await _client.from('invite_codes').insert({
+          'code': code,
+          'room_id': roomId,
+        });
+        break; // Success
+      } catch (e) {
+        if (i == 2) {
+          // Delete the orphaned room if we failed 3 times
+          await _client.from('rooms').delete().eq('id', roomId);
+          throw Exception('Failed to generate a unique invite code. Please try again.');
+        }
+        // Wait a tiny bit before retrying, though not strictly necessary
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+    }
 
     // Automatically join the room as creator
     await _client.from('room_participants').insert({

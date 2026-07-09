@@ -8,7 +8,7 @@ import 'package:ephemeral_chat/providers/settings_provider.dart';
 import 'package:ephemeral_chat/providers/call_provider.dart';
 import 'package:ephemeral_chat/screens/call_screen.dart';
 import 'package:ephemeral_chat/providers/module_providers.dart';
-
+import 'package:ephemeral_chat/widgets/watermark_overlay.dart';
 String _formatTimestamp(String? isoString) {
   if (isoString == null || isoString.isEmpty) return '';
   try {
@@ -908,8 +908,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final isOtherUserOnline = presenceUsers.any((u) => u['user_id'] != currentUserId);
     final dotColor = isOtherUserOnline ? const Color(0xFF03DAC6) : Colors.redAccent;
 
-    return Scaffold(
-      backgroundColor: moduleConfig.backgroundColor,
+    return WatermarkOverlay(
+      child: Scaffold(
+        backgroundColor: moduleConfig.backgroundColor,
       appBar: AppBar(
         title: participantAsync.when(
           data: (participant) => Row(
@@ -1752,6 +1753,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 }

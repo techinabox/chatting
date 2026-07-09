@@ -178,10 +178,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Share this invite code with others:',
+                'Share this secret keyword with your friend.\\nIt is valid for 10 minutes and can be used once.',
                 style: TextStyle(
                   color: isNeon ? themeConfig.homeSubtextColor : null,
                 ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               SelectableText(
@@ -812,11 +813,11 @@ class _JoinRoomDialogState extends ConsumerState<_JoinRoomDialog> {
               ],
               TextFormField(
                 controller: _codeController,
-                obscureText: isNeon, // show ******** like in design if neon
+                obscureText: false, // show the passphrase clearly
                 style: TextStyle(
                   color: isNeon ? themeConfig.sendButtonColor : Colors.black,
                   fontSize: isNeon ? 24 : 16,
-                  letterSpacing: isNeon ? 8.0 : null,
+                  letterSpacing: isNeon ? 2.0 : null,
                   fontWeight: isNeon ? FontWeight.bold : null,
                 ),
                 textAlign: isNeon ? TextAlign.center : TextAlign.start,
@@ -849,8 +850,8 @@ class _JoinRoomDialogState extends ConsumerState<_JoinRoomDialog> {
                   if (value.length < 8) {
                     return 'Code must be at least 8 characters';
                   }
-                  if (!RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value)) {
-                    return 'Code must be alphanumeric';
+                  if (!RegExp(r'^[a-zA-Z0-9\-]+$').hasMatch(value)) {
+                    return 'Code must contain only letters, numbers, and hyphens';
                   }
                   return null;
                 },
